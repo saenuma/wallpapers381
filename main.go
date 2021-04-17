@@ -6,7 +6,7 @@ import (
   // "fmt"
   "image"
   "path/filepath"
-  // "image/color"
+  "image/color"
 	"image/draw"
 	"image/png"
 	"os"
@@ -14,6 +14,7 @@ import (
   "golang.org/x/image/font"
   "strings"
   "bufio"
+  "github.com/go-playground/colors"
 )
 
 
@@ -39,7 +40,10 @@ func main() {
   if err != nil {
     panic(err)
   }
-  fg, bg := image.Black, image.White
+  hex, err := colors.ParseHEX("#C9B466")
+  nCR := hex.ToRGBA()
+  newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), uint8(nCR.A)}
+  bg, fg := image.Black, image.NewUniform(newColor)
 
   rgba := image.NewRGBA(image.Rect(0, 0, 1366, 768))
 	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
