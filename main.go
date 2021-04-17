@@ -21,7 +21,7 @@ import (
 const (
   DPI = 72.0
   SIZE = 80.0
-  SPACING = 1.0
+  SPACING = 1.1
 )
 
 
@@ -32,11 +32,7 @@ func main() {
   }
   text := strings.Split(string(textBytes), "\n")
 
-  fontBytes, err := embeddedFonts.ReadFile(randFontFile())
-  if err != nil {
-    panic(err)
-  }
-  fontParsed, err := freetype.ParseFont(fontBytes)
+  fontParsed, err := freetype.ParseFont(embeddedFont)
   if err != nil {
     panic(err)
   }
@@ -81,22 +77,6 @@ func main() {
 	if err != nil {
     panic(err)
 	}
-}
-
-
-func randFontFile() string {
-  dirFIs, err := embeddedFonts.ReadDir("fonts")
-  if err != nil {
-    panic(err)
-  }
-  fonts := make([]string, 0)
-  for _, dirFI := range dirFIs {
-    f := filepath.Join("fonts", dirFI.Name())
-    fonts = append(fonts, f)
-  }
-
-  var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
-  return fonts[seededRand.Intn(len(fonts))]
 }
 
 

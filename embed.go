@@ -4,8 +4,8 @@ import (
   "embed"
 )
 
-//go:embed fonts
-var embeddedFonts embed.FS
+//go:embed AmaticSC-Bold.ttf
+var embeddedFont []byte
 
 //go:embed texts
 var embeddedTexts embed.FS
