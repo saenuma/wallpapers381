@@ -3,5 +3,6 @@ a desktop wallpaper generator application (incomplete)
 
 
 ## How to run
-
-Run it and check its output at `/tmp/out.png`
+1.  Clone this repository to your system.
+2.  Run it with `go run .`
+3.  Check its output at `/tmp/out.png`
