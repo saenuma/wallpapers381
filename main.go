@@ -17,7 +17,6 @@ import (
   "strings"
   "bufio"
   "github.com/go-playground/colors"
-  "github.com/kbinani/screenshot"
 )
 
 
@@ -34,8 +33,7 @@ func main() {
     panic(err)
   }
 
-  screenBounds := screenshot.GetDisplayBounds(0)
-  rgba := image.NewRGBA(image.Rect(0, 0, screenBounds.Dx(), screenBounds.Dy()))
+  rgba := image.NewRGBA(image.Rect(0, 0, 1366, 768))
   fontDrawer := &font.Drawer{
     Dst: rgba,
     Src: image.Black,
@@ -54,7 +52,7 @@ func main() {
     for _, dirFI := range dirFIs {
       f := filepath.Join("texts", dirFI.Name())
       textBytes, _ := embeddedTexts.ReadFile(f)
-      texts := wordWrap(string(textBytes), screenBounds.Dx() - 200, fontDrawer)
+      texts := wordWrap(string(textBytes), 1366 - 200, fontDrawer)
       if len(texts) > 5 {
         panic(fmt.Sprintf("%s is more than five lines after word wrapping. Please make shorter.", f))
       }
@@ -64,7 +62,7 @@ func main() {
     if err != nil {
       panic(err)
     }
-    texts := wordWrap(string(textBytes), screenBounds.Dx() - 200, fontDrawer)
+    texts := wordWrap(string(textBytes), 1366 - 200, fontDrawer)
 
     hex, err := colors.ParseHEX("#C9B466")
     nCR := hex.ToRGBA()
