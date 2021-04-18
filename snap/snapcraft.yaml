@@ -13,7 +13,7 @@ parts:
   my-part:
     # See 'snapcraft plugins'
     plugin: go
-    source: https://github.com/bankole7782/flaarum.git
+    source: https://github.com/bankole7782/wallpapers381.git
 
 
 apps:
