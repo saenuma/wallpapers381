@@ -1,4 +1,4 @@
-# wally
+# wallpapers381
 a desktop wallpaper generator application (incomplete)
 
 
