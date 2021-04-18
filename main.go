@@ -15,6 +15,7 @@ import (
   "strings"
   "bufio"
   "github.com/go-playground/colors"
+  "github.com/kbinani/screenshot"
 )
 
 
@@ -41,7 +42,10 @@ func main() {
   newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), uint8(nCR.A)}
   bg, fg := image.Black, image.NewUniform(newColor)
 
-  rgba := image.NewRGBA(image.Rect(0, 0, 1366, 768))
+
+  screenBounds := screenshot.GetDisplayBounds(0)
+
+  rgba := image.NewRGBA(image.Rect(0, 0, screenBounds.Dx(), screenBounds.Dy()))
 	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
 	c := freetype.NewContext()
 	c.SetDPI(DPI)
@@ -51,6 +55,8 @@ func main() {
 	c.SetDst(rgba)
 	c.SetSrc(fg)
   c.SetHinting(font.HintingNone)
+
+
 
   // Draw the text.
 	pt := freetype.Pt(50, 50+int(c.PointToFixed(SIZE)>>6))
