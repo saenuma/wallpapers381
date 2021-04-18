@@ -4,7 +4,7 @@ import (
   "embed"
 )
 
-//go:embed AmaticSC-Bold.ttf
+//go:embed "Melted Monster.ttf"
 var embeddedFont []byte
 
 //go:embed texts
