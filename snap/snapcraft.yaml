@@ -18,4 +18,4 @@ parts:
 
 apps:
   wallpapers381:
-    command: bin/wallpapers381
+    command: wallpapers381
