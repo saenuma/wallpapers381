@@ -93,7 +93,8 @@ func main() {
   	}
 
     // Save that RGBA image to disk.
-  	outFile, err := os.Create("/tmp/out.png")
+    outPath := getOutputPath()
+  	outFile, err := os.Create(outPath)
   	if err != nil {
       panic(err)
   	}
@@ -107,6 +108,8 @@ func main() {
   	if err != nil {
       panic(err)
   	}
+
+    fmt.Printf("Check the wallpaper at '%s'.\n", outPath)
   }
 
 }
@@ -152,4 +155,20 @@ func wordWrap(text string, writeWidth int, fontDrawer *font.Drawer) []string {
   outStrs = append(outStrs, tmpStr)
 
   return outStrs
+}
+
+
+func getOutputPath() string {
+  hd, err := os.UserHomeDir()
+	if err != nil {
+	  panic("Can't get user's home directory.")
+	}
+	dd := os.Getenv("SNAP_USER_DATA")
+	if strings.HasPrefix(dd, filepath.Join(hd, "snap", "go")) || dd == "" {
+    os.MkdirAll(filepath.Join(hd, "wallpapers381"), 0777)
+		dd = filepath.Join(hd, "wallpapers381", "wallpaper.png")
+	} else {
+    dd = filepath.Join(dd, "wallpaper.png")
+  }
+  return dd
 }
