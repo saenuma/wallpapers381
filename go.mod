@@ -1,4 +1,4 @@
-module github.com/bankole7782/wally
+module github.com/bankole7782/wallpapers381
 
 go 1.16
 
