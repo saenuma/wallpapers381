@@ -22,7 +22,7 @@ import (
 
 const (
   DPI = 72.0
-  SIZE = 90.0
+  SIZE = 80.0
   SPACING = 1.1
 )
 
@@ -62,7 +62,7 @@ func main() {
     if err != nil {
       panic(err)
     }
-    texts := wordWrap(string(textBytes), 1366 - 200, fontDrawer)
+    texts := wordWrap(string(textBytes), 1366 - 100, fontDrawer)
 
     hex, err := colors.ParseHEX("#C9B466")
     nCR := hex.ToRGBA()
@@ -81,7 +81,7 @@ func main() {
     c.SetHinting(font.HintingNone)
 
     // Draw the text.
-  	pt := freetype.Pt(100, 100+int(c.PointToFixed(SIZE)>>6))
+  	pt := freetype.Pt(50, 50+int(c.PointToFixed(SIZE)>>6))
   	for _, s := range texts {
   		_, err = c.DrawString(s, pt)
   		if err != nil {
