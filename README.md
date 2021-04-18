@@ -6,3 +6,8 @@ a desktop wallpaper generator application (incomplete)
 1.  Clone this repository to your system.
 2.  Run it with `go run .`
 3.  Check its output at `/tmp/out.png`
+
+
+## Instructions for text included
+
+Write the text without any newlines. The program would take care of the wordwrapping.
