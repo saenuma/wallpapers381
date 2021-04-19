@@ -161,7 +161,7 @@ func getOutputPath() string {
 	if err != nil {
 	  panic("Can't get user's home directory.")
 	}
-	dd := os.Getenv("SNAP_USER_DATA")
+	dd := os.Getenv("SNAP_USER_COMMON")
 	if strings.HasPrefix(dd, filepath.Join(hd, "snap", "go")) || dd == "" {
     os.MkdirAll(filepath.Join(hd, "wallpapers381"), 0777)
 		dd = filepath.Join(hd, "wallpapers381", "wallpaper.png")
