@@ -17,13 +17,12 @@ import (
   "strings"
   "bufio"
   "github.com/go-playground/colors"
-  "bytes"
 )
 
 
 const (
   DPI = 72.0
-  SIZE = 80.0
+  SIZE = 90.0
   SPACING = 1.1
 )
 
@@ -54,8 +53,8 @@ func main() {
       f := filepath.Join("texts", dirFI.Name())
       textBytes, _ := embeddedTexts.ReadFile(f)
       texts := wordWrap(string(textBytes), 1366 - 200, fontDrawer)
-      if len(texts) > 5 {
-        panic(fmt.Sprintf("%s is more than five lines after word wrapping. Please make shorter.", f))
+      if len(texts) > 6 {
+        panic(fmt.Sprintf("%s is more than six lines after word wrapping. Please make shorter.", f))
       }
     }
   } else {
@@ -69,17 +68,12 @@ func main() {
     nCR := hex.ToRGBA()
     newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
 
-    // hex, err = colors.ParseHEX("#F2A550")
-    // nCR = hex.ToRGBA()
-    // newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
-    // // #72B9AC
+    hex, err = colors.ParseHEX("#F2A550")
+    nCR = hex.ToRGBA()
+    newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
 
-    bg, _, err := image.Decode(bytes.NewReader(embeddedBackground))
-    if err != nil {
-      panic(err)
-    }
     fg := image.NewUniform(newColor)
-
+    bg := image.NewUniform(newColor2)
 
   	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
   	c := freetype.NewContext()
