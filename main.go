@@ -22,7 +22,7 @@ import (
 
 const (
   DPI = 72.0
-  SIZE = 90.0
+  SIZE = 80.0
   SPACING = 1.1
 )
 
@@ -64,10 +64,15 @@ func main() {
     }
     texts := wordWrap(string(textBytes), 1366 - 100, fontDrawer)
 
-    hex, err := colors.ParseHEX("#C9B466")
+    hex, err := colors.ParseHEX("#3C2205")
     nCR := hex.ToRGBA()
-    newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), uint8(nCR.A)}
-    bg, fg := image.Black, image.NewUniform(newColor)
+    newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+
+    hex, err = colors.ParseHEX("#F2A550")
+    nCR = hex.ToRGBA()
+    newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+    // #72B9AC
+    bg, fg := image.NewUniform(newColor2), image.NewUniform(newColor)
 
 
   	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
