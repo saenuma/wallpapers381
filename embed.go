@@ -4,7 +4,7 @@ import (
   "embed"
 )
 
-//go:embed "JandaQuirkygirl.ttf"
+//go:embed "Bee Dotty.ttf"
 var embeddedFont []byte
 
 //go:embed texts
