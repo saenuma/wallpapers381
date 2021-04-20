@@ -1,0 +1,1 @@
+Factories can take more than 20 million dollars to setup.

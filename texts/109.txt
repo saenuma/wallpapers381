@@ -1,0 +1,1 @@
+A new factory object must be baptized by the Factory Lords.
