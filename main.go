@@ -17,6 +17,7 @@ import (
   "strings"
   "bufio"
   "github.com/go-playground/colors"
+  "bytes"
 )
 
 
@@ -68,11 +69,16 @@ func main() {
     nCR := hex.ToRGBA()
     newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
 
-    hex, err = colors.ParseHEX("#F2A550")
-    nCR = hex.ToRGBA()
-    newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
-    // #72B9AC
-    bg, fg := image.NewUniform(newColor2), image.NewUniform(newColor)
+    // hex, err = colors.ParseHEX("#F2A550")
+    // nCR = hex.ToRGBA()
+    // newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+    // // #72B9AC
+
+    bg, _, err := image.Decode(bytes.NewReader(embeddedBackground))
+    if err != nil {
+      panic(err)
+    }
+    fg := image.NewUniform(newColor)
 
 
   	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
