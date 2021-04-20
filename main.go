@@ -62,7 +62,7 @@ func main() {
     if err != nil {
       panic(err)
     }
-    texts := wordWrap(string(textBytes), 1366 - 100, fontDrawer)
+    texts := wordWrap(string(textBytes), 1366 - 130, fontDrawer)
 
     hex, err := colors.ParseHEX("#3C2205")
     nCR := hex.ToRGBA()
@@ -86,7 +86,7 @@ func main() {
     c.SetHinting(font.HintingNone)
 
     // Draw the text.
-  	pt := freetype.Pt(50, 50+int(c.PointToFixed(SIZE)>>6))
+  	pt := freetype.Pt(80, 50+int(c.PointToFixed(SIZE)>>6))
   	for _, s := range texts {
   		_, err = c.DrawString(s, pt)
   		if err != nil {
