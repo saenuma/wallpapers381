@@ -1,5 +1,5 @@
 # wallpapers381
-a desktop wallpaper generator application (incomplete)
+a desktop wallpaper generator application
 
 
 ## How to run (development)
