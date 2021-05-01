@@ -50,14 +50,82 @@ func main() {
       panic(err)
     }
     for _, dirFI := range dirFIs {
-      f := filepath.Join("texts", dirFI.Name())
+      f := "texts/" + dirFI.Name()
       textBytes, _ := embeddedTexts.ReadFile(f)
       texts := wordWrap(string(textBytes), 1366 - 200, fontDrawer)
       if len(texts) > 6 {
         panic(fmt.Sprintf("%s is more than six lines after word wrapping. Please make shorter.", f))
       }
     }
+  } else if len(os.Args) == 2 && os.Args[1] == "g" {
+    dirFIs, err := embeddedTexts.ReadDir("texts")
+    if err != nil {
+      panic(err)
+    }
+    for _, dirFI := range dirFIs {
+      f := "texts/" + dirFI.Name()
+      textBytes, _ := embeddedTexts.ReadFile(f)
+
+      texts := wordWrap(string(textBytes), 1366 - 130, fontDrawer)
+
+      hex, err := colors.ParseHEX("#3C2205")
+      nCR := hex.ToRGBA()
+      newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+
+      hex, err = colors.ParseHEX("#F2A550")
+      nCR = hex.ToRGBA()
+      newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+
+      fg := image.NewUniform(newColor)
+      bg := image.NewUniform(newColor2)
+
+      draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
+      c := freetype.NewContext()
+      c.SetDPI(DPI)
+      c.SetFont(fontParsed)
+      c.SetFontSize(SIZE)
+      c.SetClip(rgba.Bounds())
+      c.SetDst(rgba)
+      c.SetSrc(fg)
+      c.SetHinting(font.HintingNone)
+
+      // Draw the text.
+      pt := freetype.Pt(80, 50+int(c.PointToFixed(SIZE)>>6))
+      for _, s := range texts {
+        _, err = c.DrawString(s, pt)
+        if err != nil {
+          panic(err)
+        }
+        pt.Y += c.PointToFixed(SIZE * SPACING)
+      }
+
+      // Save that RGBA image to disk.
+      outPath := getOutputPath2(strings.Replace(dirFI.Name(),".txt", ".png", 1))
+      outFile, err := os.Create(outPath)
+      if err != nil {
+        panic(err)
+      }
+      defer outFile.Close()
+      b := bufio.NewWriter(outFile)
+      err = png.Encode(b, rgba)
+      if err != nil {
+        panic(err)
+      }
+      err = b.Flush()
+      if err != nil {
+        panic(err)
+      }
+
+    }
+    hd, err := os.UserHomeDir()
+    if err != nil {
+      panic("Can't get user's home directory.")
+    }
+
+    fmt.Printf("Check the wallpapers at '%s'.\n", filepath.Join(hd, "w381"))
+
   } else {
+
     textBytes, err := embeddedTexts.ReadFile(randTextFile())
     if err != nil {
       panic(err)
@@ -125,7 +193,7 @@ func randTextFile() string {
   }
   texts := make([]string, 0)
   for _, dirFI := range dirFIs {
-    f := filepath.Join("texts", dirFI.Name())
+    f := "texts/" + dirFI.Name()
     texts = append(texts, f)
   }
 
@@ -174,4 +242,15 @@ func getOutputPath() string {
     dd = filepath.Join(dd, "wallpaper.png")
   }
   return dd
+}
+
+
+func getOutputPath2(filename string) string {
+  hd, err := os.UserHomeDir()
+  if err != nil {
+    panic("Can't get user's home directory.")
+  }
+
+  os.MkdirAll(filepath.Join(hd, "w381"), 0777)
+  return filepath.Join(hd, "w381", filename)
 }
