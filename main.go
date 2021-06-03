@@ -24,6 +24,7 @@ const (
   DPI = 72.0
   SIZE = 90.0
   SPACING = 1.1
+  MSIZE = 45.0
 )
 
 
@@ -34,6 +35,7 @@ func main() {
   }
 
   rgba := image.NewRGBA(image.Rect(0, 0, 1366, 768))
+  mrgba := image.NewRGBA(image.Rect(0, 0, 411, 731))
   fontDrawer := &font.Drawer{
     Dst: rgba,
     Src: image.Black,
@@ -43,6 +45,17 @@ func main() {
       Hinting: font.HintingNone,
     }),
   }
+
+  mFontDrawer := &font.Drawer{
+    Dst: mrgba,
+    Src: image.Black,
+    Face: truetype.NewFace(fontParsed, &truetype.Options{
+      Size: MSIZE,
+      DPI: DPI,
+      Hinting: font.HintingNone,
+    }),
+  }
+
 
   if len(os.Args) == 2 && os.Args[1] == "t" {
     dirFIs, err := embeddedTexts.ReadDir("texts")
@@ -57,7 +70,75 @@ func main() {
         panic(fmt.Sprintf("%s is more than six lines after word wrapping. Please make shorter.", f))
       }
     }
+  } else if len(os.Args) == 2 && os.Args[1] == "mg" {
+
+    dirFIs, err := embeddedTexts.ReadDir("texts")
+    if err != nil {
+      panic(err)
+    }
+    for _, dirFI := range dirFIs {
+      f := "texts/" + dirFI.Name()
+      textBytes, _ := embeddedTexts.ReadFile(f)
+
+      texts := wordWrap(string(textBytes), 411 - 50, mFontDrawer)
+      hex, err := colors.ParseHEX("#3C2205")
+      nCR := hex.ToRGBA()
+      newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+
+      hex, err = colors.ParseHEX("#F2A550")
+      nCR = hex.ToRGBA()
+      newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+
+      fg := image.NewUniform(newColor)
+      bg := image.NewUniform(newColor2)
+
+      draw.Draw(mrgba, mrgba.Bounds(), bg, image.ZP, draw.Src)
+      c := freetype.NewContext()
+      c.SetDPI(DPI)
+      c.SetFont(fontParsed)
+      c.SetFontSize(MSIZE)
+      c.SetClip(mrgba.Bounds())
+      c.SetDst(mrgba)
+      c.SetSrc(fg)
+      c.SetHinting(font.HintingNone)
+
+      // Draw the text.
+      pt := freetype.Pt(25, 70+int(c.PointToFixed(MSIZE)>>6))
+      for _, s := range texts {
+        _, err = c.DrawString(s, pt)
+        if err != nil {
+          panic(err)
+        }
+        pt.Y += c.PointToFixed(MSIZE * SPACING)
+      }
+
+      // Save that RGBA image to disk.
+      outPath := getOutputPath3(strings.Replace(dirFI.Name(),".txt", ".png", 1))
+      outFile, err := os.Create(outPath)
+      if err != nil {
+        panic(err)
+      }
+      defer outFile.Close()
+      b := bufio.NewWriter(outFile)
+      err = png.Encode(b, mrgba)
+      if err != nil {
+        panic(err)
+      }
+      err = b.Flush()
+      if err != nil {
+        panic(err)
+      }
+
+    }
+    hd, err := os.UserHomeDir()
+    if err != nil {
+      panic("Can't get user's home directory.")
+    }
+
+    fmt.Printf("Check the wallpapers at '%s'.\n", filepath.Join(hd, "w381m"))
+
   } else if len(os.Args) == 2 && os.Args[1] == "g" {
+
     dirFIs, err := embeddedTexts.ReadDir("texts")
     if err != nil {
       panic(err)
@@ -67,7 +148,6 @@ func main() {
       textBytes, _ := embeddedTexts.ReadFile(f)
 
       texts := wordWrap(string(textBytes), 1366 - 130, fontDrawer)
-
       hex, err := colors.ParseHEX("#3C2205")
       nCR := hex.ToRGBA()
       newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
@@ -253,4 +333,15 @@ func getOutputPath2(filename string) string {
 
   os.MkdirAll(filepath.Join(hd, "w381"), 0777)
   return filepath.Join(hd, "w381", filename)
+}
+
+
+func getOutputPath3(filename string) string {
+  hd, err := os.UserHomeDir()
+  if err != nil {
+    panic("Can't get user's home directory.")
+  }
+
+  os.MkdirAll(filepath.Join(hd, "w381m"), 0777)
+  return filepath.Join(hd, "w381m", filename) 
 }
