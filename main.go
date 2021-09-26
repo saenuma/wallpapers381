@@ -64,8 +64,8 @@ func main() {
     }
     for _, dirFI := range dirFIs {
       f := "texts/" + dirFI.Name()
-      textBytes, _ := embeddedTexts.ReadFile(f)
-      texts := wordWrap(string(textBytes), 1366 - 200, fontDrawer)
+      fullText := getOutputTxt(f)
+      texts := wordWrap(fullText, 1366 - 200, fontDrawer)
       if len(texts) > 6 {
         panic(fmt.Sprintf("%s is more than six lines after word wrapping. Please make shorter.", f))
       }
@@ -78,9 +78,9 @@ func main() {
     }
     for _, dirFI := range dirFIs {
       f := "texts/" + dirFI.Name()
-      textBytes, _ := embeddedTexts.ReadFile(f)
+      fullText := getOutputTxt(f)
 
-      texts := wordWrap(string(textBytes), 411 - 50, mFontDrawer)
+      texts := wordWrap(fullText, 411 - 50, mFontDrawer)
       hex, err := colors.ParseHEX("#3C2205")
       nCR := hex.ToRGBA()
       newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
@@ -145,9 +145,9 @@ func main() {
     }
     for _, dirFI := range dirFIs {
       f := "texts/" + dirFI.Name()
-      textBytes, _ := embeddedTexts.ReadFile(f)
+      fullText := getOutputTxt(f)
 
-      texts := wordWrap(string(textBytes), 1366 - 130, fontDrawer)
+      texts := wordWrap(fullText, 1366 - 130, fontDrawer)
       hex, err := colors.ParseHEX("#3C2205")
       nCR := hex.ToRGBA()
       newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
@@ -206,11 +206,8 @@ func main() {
 
   } else {
 
-    textBytes, err := embeddedTexts.ReadFile(randTextFile())
-    if err != nil {
-      panic(err)
-    }
-    texts := wordWrap(string(textBytes), 1366 - 130, fontDrawer)
+    toPrintTxt := randTextFile()
+    texts := wordWrap(getOutputTxt(toPrintTxt), 1366 - 130, fontDrawer)
 
     hex, err := colors.ParseHEX("#3C2205")
     nCR := hex.ToRGBA()
@@ -343,5 +340,13 @@ func getOutputPath3(filename string) string {
   }
 
   os.MkdirAll(filepath.Join(hd, "w381m"), 0777)
-  return filepath.Join(hd, "w381m", filename) 
+  return filepath.Join(hd, "w381m", filename)
+}
+
+
+func getOutputTxt(txtPath string) string {
+  t := strings.ReplaceAll(txtPath, ".txt", "")
+  t = strings.ReplaceAll(t, "texts/", "")
+  textBytes, _ := embeddedTexts.ReadFile(txtPath)
+  return t + ".  " + string(textBytes)
 }
