@@ -4,8 +4,8 @@ import (
   "embed"
 )
 
-//go:embed "Bee Dotty.ttf"
-var embeddedFont []byte
+//go:embed fonts
+var embeddedFonts embed.FS
 
 //go:embed texts
 var embeddedTexts embed.FS
