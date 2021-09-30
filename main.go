@@ -1,8 +1,6 @@
 package main
 
 import (
-  "math/rand"
-  "time"
   "fmt"
   "image"
   "path/filepath"
@@ -17,6 +15,8 @@ import (
   "strings"
   "bufio"
   "github.com/go-playground/colors"
+  "github.com/pkg/errors"
+  "strconv"
 )
 
 
@@ -40,7 +40,7 @@ func main() {
       f := "texts/" + dirFI.Name()
       fullText := getOutputTxt(f)
 
-      fontBytes, err := embeddedFonts.ReadFile(randFontFile())
+      fontBytes, err := embeddedFonts.ReadFile(getNextFontAddr())
       if err != nil {
         panic(err)
       }
@@ -75,7 +75,7 @@ func main() {
       f := "texts/" + dirFI.Name()
       fullText := getOutputTxt(f)
 
-      fontBytes, err := embeddedFonts.ReadFile(randFontFile())
+      fontBytes, err := embeddedFonts.ReadFile(getNextFontAddr())
       if err != nil {
         panic(err)
       }
@@ -153,7 +153,7 @@ func main() {
 
   } else {
 
-    fontBytes, err := embeddedFonts.ReadFile(randFontFile())
+    fontBytes, err := embeddedFonts.ReadFile(getNextFontAddr())
     if err != nil {
       panic(err)
     }
@@ -172,7 +172,7 @@ func main() {
       }),
     }
 
-    toPrintTxt := randTextFile()
+    toPrintTxt := getNextTextAddr()
     texts := wordWrap(getOutputTxt(toPrintTxt), 1366 - 130, fontDrawer)
 
     hex, err := colors.ParseHEX("#3C2205")
@@ -228,38 +228,83 @@ func main() {
 
 }
 
+func GetRootPath() (string, error) {
+	hd, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.Wrap(err, "os error")
+	}
+	dd := os.Getenv("SNAP_USER_COMMON")
+	if strings.HasPrefix(dd, filepath.Join(hd, "snap", "go")) || dd == "" {
+		dd = filepath.Join(hd, "wallpapers381_data")
+    os.MkdirAll(dd, 0777)
+	}
 
-func randTextFile() string {
+	return dd, nil
+}
+
+
+func DoesPathExists(p string) bool {
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+
+func getNextTextAddr() string {
   dirFIs, err := embeddedTexts.ReadDir("texts")
   if err != nil {
     panic(err)
   }
-  texts := make([]string, 0)
-  for _, dirFI := range dirFIs {
-    f := "texts/" + dirFI.Name()
-    texts = append(texts, f)
-  }
 
-  var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
-  return texts[seededRand.Intn(len(texts))]
+  rootPath, _ := GetRootPath()
+  if DoesPathExists(filepath.Join(rootPath, "last_text.txt")) {
+    rawLastText, _ := os.ReadFile(filepath.Join(rootPath, "last_text.txt"))
+    number, err := strconv.Atoi(strings.TrimSpace(string(rawLastText)))
+    if err != nil {
+      panic(err)
+    }
+    toReturnNumber := number + 1
+    if toReturnNumber > len(dirFIs) {
+      toReturnNumber = 1
+    }
+    os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(toReturnNumber)), 0777)
+    return fmt.Sprintf("texts/%d.txt", toReturnNumber)
+  } else {
+    os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte("1"), 0777)
+    return "texts/1.txt"
+  }
 }
 
 
-func randFontFile() string {
+func getNextFontAddr() string {
   dirFIs, err := embeddedFonts.ReadDir("fonts")
   if err != nil {
     panic(err)
   }
   fonts := make([]string, 0)
   for _, dirFI := range dirFIs {
-    f := "fonts/" + dirFI.Name()
-    fonts = append(fonts, f)
+    fonts = append(fonts, dirFI.Name())
   }
 
-  var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
-  return fonts[seededRand.Intn(len(fonts))]
+  rootPath, _ := GetRootPath()
+  if DoesPathExists(filepath.Join(rootPath, "last_font.txt")) {
+    rawLastFont, _ := os.ReadFile(filepath.Join(rootPath, "last_font.txt"))
+    number, err := strconv.Atoi(strings.TrimSpace(string(rawLastFont)))
+    if err != nil {
+      panic(err)
+    }
+    toReturnNumber := number + 1
+    if toReturnNumber > len(dirFIs) {
+      toReturnNumber = 1
+    }
+    os.WriteFile(filepath.Join(rootPath, "last_font.txt"), []byte(strconv.Itoa(toReturnNumber)), 0777)
+    return fmt.Sprintf("fonts/%s", fonts[toReturnNumber-1])
+  } else {
+    os.WriteFile(filepath.Join(rootPath, "last_font.txt"), []byte("1"), 0777)
+    return fmt.Sprintf("fonts/%s", fonts[0])
+  }
 }
-
 
 
 func wordWrap(text string, writeWidth int, fontDrawer *font.Drawer) []string {
