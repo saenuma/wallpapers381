@@ -22,14 +22,18 @@ parts:
       set -xe
       go mod download
       go build -o $SNAPCRAFT_PART_INSTALL/bin/wallpapers381 ./ubuntu
+      go build -o $SNAPCRAFT_PART_INSTALL/bin/switch ./ubuntu_switch
 
 
 
 apps:
   wallpapers381:
     command: bin/wallpapers381
-    extensions: [gnome-3-38]
     daemon: simple
     restart-condition: on-abnormal
+
+  switch:
+    command: bin/switch
+    extensions: [gnome-3-38]
     plugs:
       - gsettings

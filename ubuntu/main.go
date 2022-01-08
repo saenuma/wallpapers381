@@ -19,7 +19,6 @@ import (
   "strconv"
   "github.com/bankole7782/wallpapers381/libw381"
   "time"
-  "os/exec"
 )
 
 
@@ -106,11 +105,6 @@ func main() {
       panic(err)
   	}
 
-    out, err := exec.Command("gsettings", "set", "org.gnome.desktop.background", "picture-uri", "file://" + outPath).CombinedOutput()
-    if err != nil {
-      fmt.Println(err)
-      fmt.Println(string(out))
-    }
     fmt.Println("Changed the wallpaper @ ", time.Now().String())
 
     // sleep for 30 seconds
