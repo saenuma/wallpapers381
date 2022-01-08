@@ -17,6 +17,7 @@ import (
   "github.com/go-playground/colors"
   "github.com/pkg/errors"
   "strconv"
+  "github.com/bankole7781/wallpapers381/libw381"
 )
 
 
@@ -32,7 +33,7 @@ func main() {
   rgba := image.NewRGBA(image.Rect(0, 0, 1366, 768))
 
   if len(os.Args) == 2 && os.Args[1] == "t" {
-    dirFIs, err := embeddedTexts.ReadDir("texts")
+    dirFIs, err := libw381.EmbeddedTexts.ReadDir("texts")
     if err != nil {
       panic(err)
     }
@@ -40,7 +41,7 @@ func main() {
       f := "texts/" + dirFI.Name()
       fullText := getOutputTxt(f)
 
-      fontBytes, err := embeddedFonts.ReadFile(getNextFontAddr())
+      fontBytes, err := libw381.EmbeddedFonts.ReadFile(getNextFontAddr())
       if err != nil {
         panic(err)
       }
@@ -67,7 +68,7 @@ func main() {
 
   } else if len(os.Args) == 2 && os.Args[1] == "g" {
 
-    dirFIs, err := embeddedTexts.ReadDir("texts")
+    dirFIs, err := libw381.EmbeddedTexts.ReadDir("texts")
     if err != nil {
       panic(err)
     }
@@ -75,7 +76,7 @@ func main() {
       f := "texts/" + dirFI.Name()
       fullText := getOutputTxt(f)
 
-      fontBytes, err := embeddedFonts.ReadFile(getNextFontAddr())
+      fontBytes, err := libw381.EmbeddedFonts.ReadFile(getNextFontAddr())
       if err != nil {
         panic(err)
       }
@@ -153,7 +154,7 @@ func main() {
 
   } else {
 
-    fontBytes, err := embeddedFonts.ReadFile(getNextFontAddr())
+    fontBytes, err := libw381.EmbeddedFonts.ReadFile(getNextFontAddr())
     if err != nil {
       panic(err)
     }
@@ -252,7 +253,7 @@ func DoesPathExists(p string) bool {
 
 
 func getNextTextAddr() string {
-  dirFIs, err := embeddedTexts.ReadDir("texts")
+  dirFIs, err := libw381.EmbeddedTexts.ReadDir("texts")
   if err != nil {
     panic(err)
   }
@@ -278,7 +279,7 @@ func getNextTextAddr() string {
 
 
 func getNextFontAddr() string {
-  dirFIs, err := embeddedFonts.ReadDir("fonts")
+  dirFIs, err := libw381.EmbeddedFonts.ReadDir("fonts")
   if err != nil {
     panic(err)
   }
@@ -364,6 +365,6 @@ func getOutputPath2(filename string) string {
 func getOutputTxt(txtPath string) string {
   t := strings.ReplaceAll(txtPath, ".txt", "")
   t = strings.ReplaceAll(t, "texts/", "")
-  textBytes, _ := embeddedTexts.ReadFile(txtPath)
+  textBytes, _ := libw381.EmbeddedTexts.ReadFile(txtPath)
   return t + ".  " + string(textBytes)
 }
