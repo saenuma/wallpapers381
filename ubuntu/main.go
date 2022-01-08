@@ -106,7 +106,7 @@ func main() {
       panic(err)
   	}
 
-    out, err = exec.Command("gsettings", "set", "org.gnome.desktop.background", "picture-uri", "file:///" + outPath).CombinedOutput()
+    out, err := exec.Command("gsettings", "set", "org.gnome.desktop.background", "picture-uri", "file://" + outPath).CombinedOutput()
     if err != nil {
       fmt.Println(err)
       fmt.Println(string(out))
