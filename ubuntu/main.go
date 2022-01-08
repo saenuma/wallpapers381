@@ -110,7 +110,7 @@ func main() {
     if err != nil {
       fmt.Println(err)
     }
-    fmt.Println("Changed the wallpaper @", time.Now().String())
+    fmt.Println("Changed the wallpaper @ ", time.Now().String())
 
     // sleep for 30 seconds
     // time.Sleep(30 * 60 * time.Second)
@@ -131,7 +131,7 @@ func GetRootPath() (string, error) {
     os.MkdirAll(dd, 0777)
     return dd, nil
 	} else {
-    return filepath.Join(hd, "snap", "wallpapers381", "common"), nil
+    return hd, nil
   }
 }
 
