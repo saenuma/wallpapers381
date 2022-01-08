@@ -121,18 +121,17 @@ func main() {
 }
 
 func GetRootPath() (string, error) {
-	hd, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.Wrap(err, "os error")
-	}
-	dd := os.Getenv("SNAP_USER_COMMON")
-	if strings.HasPrefix(dd, filepath.Join(hd, "snap", "go")) || dd == "" {
+	dd := os.Getenv("SNAP_COMMON")
+	if strings.HasPrefix(dd, "/var/snap/go") || dd == "" {
+    hd, err := os.UserHomeDir()
+    if err != nil {
+      return "", errors.Wrap(err, "os error")
+    }
 		dd = filepath.Join(hd, "wallpapers381_data")
     os.MkdirAll(dd, 0777)
-    return dd, nil
-	} else {
-    return hd, nil
-  }
+	}
+
+  return dd, nil
 }
 
 
