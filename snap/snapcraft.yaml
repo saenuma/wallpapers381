@@ -18,11 +18,16 @@ parts:
     # See 'snapcraft plugins'
     plugin: go
     source: .
+    override-build: |
+      set -xe
+      go mod download
+      go build -o $SNAPCRAFT_PART_INSTALL/bin/wallpapers381 ./ubuntu
+
 
 
 apps:
   wallpapers381:
-    command: bin/ubuntu
+    command: bin/wallpapers381
     extensions: [gnome-3-38]
     daemon: simple
     restart-condition: on-abnormal
