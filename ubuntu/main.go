@@ -106,9 +106,10 @@ func main() {
       panic(err)
   	}
 
-    err = exec.Command("gsettings", "set", "org.gnome.desktop.background", "picture-uri", "file:///" + outPath).Run()
+    out, err = exec.Command("gsettings", "set", "org.gnome.desktop.background", "picture-uri", "file:///" + outPath).CombinedOutput()
     if err != nil {
       fmt.Println(err)
+      fmt.Println(string(out))
     }
     fmt.Println("Changed the wallpaper @ ", time.Now().String())
 
