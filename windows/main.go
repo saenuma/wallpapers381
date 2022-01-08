@@ -17,7 +17,7 @@ import (
   "github.com/go-playground/colors"
   "github.com/pkg/errors"
   "strconv"
-  "github.com/bankole7781/wallpapers381/libw381"
+  "github.com/bankole7782/wallpapers381/libw381"
 )
 
 
@@ -152,79 +152,6 @@ func main() {
 
     fmt.Printf("Check the wallpapers at '%s'.\n", filepath.Join(hd, "w381"))
 
-  } else {
-
-    fontBytes, err := libw381.EmbeddedFonts.ReadFile(getNextFontAddr())
-    if err != nil {
-      panic(err)
-    }
-    fontParsed, err := freetype.ParseFont(fontBytes)
-    if err != nil {
-      panic(err)
-    }
-
-    fontDrawer := &font.Drawer{
-      Dst: rgba,
-      Src: image.Black,
-      Face: truetype.NewFace(fontParsed, &truetype.Options{
-        Size: SIZE,
-        DPI: DPI,
-        Hinting: font.HintingNone,
-      }),
-    }
-
-    toPrintTxt := getNextTextAddr()
-    texts := wordWrap(getOutputTxt(toPrintTxt), 1366 - 130, fontDrawer)
-
-    hex, err := colors.ParseHEX("#3C2205")
-    nCR := hex.ToRGBA()
-    newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
-
-    hex, err = colors.ParseHEX("#F2A550")
-    nCR = hex.ToRGBA()
-    newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
-
-    fg := image.NewUniform(newColor)
-    bg := image.NewUniform(newColor2)
-
-  	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
-  	c := freetype.NewContext()
-  	c.SetDPI(DPI)
-  	c.SetFont(fontParsed)
-  	c.SetFontSize(SIZE)
-  	c.SetClip(rgba.Bounds())
-  	c.SetDst(rgba)
-  	c.SetSrc(fg)
-    c.SetHinting(font.HintingNone)
-
-    // Draw the text.
-  	pt := freetype.Pt(80, 50+int(c.PointToFixed(SIZE)>>6))
-  	for _, s := range texts {
-  		_, err = c.DrawString(s, pt)
-  		if err != nil {
-  			panic(err)
-  		}
-  		pt.Y += c.PointToFixed(SIZE * SPACING)
-  	}
-
-    // Save that RGBA image to disk.
-    outPath := getOutputPath()
-  	outFile, err := os.Create(outPath)
-  	if err != nil {
-      panic(err)
-  	}
-  	defer outFile.Close()
-  	b := bufio.NewWriter(outFile)
-  	err = png.Encode(b, rgba)
-  	if err != nil {
-      panic(err)
-  	}
-  	err = b.Flush()
-  	if err != nil {
-      panic(err)
-  	}
-
-    fmt.Printf("Check the wallpaper at '%s'.\n", outPath)
   }
 
 }
