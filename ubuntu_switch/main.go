@@ -39,4 +39,6 @@ func main() {
     fmt.Println(err)
     fmt.Println(string(out))
   }
+
+  fmt.Println("Successfully switched to a wallpapers381's wallpaper.")
 }
