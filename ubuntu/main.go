@@ -4,7 +4,6 @@ import (
   "fmt"
   "image"
   "path/filepath"
-  "image/color"
 	"image/draw"
 	"image/png"
 	"os"
@@ -14,7 +13,7 @@ import (
   "golang.org/x/image/font"
   "strings"
   "bufio"
-  "github.com/go-playground/colors"
+  "github.com/lucasb-eyer/go-colorful"
   "github.com/pkg/errors"
   "strconv"
   "github.com/bankole7782/wallpapers381/libw381"
@@ -57,13 +56,8 @@ func main() {
     toPrintTxt := getNextTextAddr()
     texts := wordWrap(getOutputTxt(toPrintTxt), 1366 - 130, fontDrawer)
 
-    hex, err := colors.ParseHEX("#3C2205")
-    nCR := hex.ToRGBA()
-    newColor := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
-
-    hex, err = colors.ParseHEX("#F2A550")
-    nCR = hex.ToRGBA()
-    newColor2 := color.RGBA{uint8(nCR.R), uint8(nCR.G), uint8(nCR.B), 255}
+    newColor, _ := colorful.Hex("#3C2205")
+    newColor2, _ := colorful.Hex("#F2A550")
 
     fg := image.NewUniform(newColor)
     bg := image.NewUniform(newColor2)
