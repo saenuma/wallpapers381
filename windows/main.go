@@ -16,7 +16,7 @@ import (
   "github.com/lucasb-eyer/go-colorful"
   "github.com/pkg/errors"
   "strconv"
-  "github.com/bankole7782/wallpapers381/libw381"
+  "github.com/saenuma/wallpapers381/libw381"
 )
 
 
