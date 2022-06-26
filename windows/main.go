@@ -75,12 +75,14 @@ func main() {
       f := "texts/" + dirFI.Name()
       fullText := getOutputTxt(f)
 
-      fontBytes, err := libw381.EmbeddedFonts.ReadFile(getNextFontAddr())
+      fontAddr := getNextFontAddr()
+      fontBytes, err := libw381.EmbeddedFonts.ReadFile(fontAddr)
       if err != nil {
         panic(err)
       }
       fontParsed, err := freetype.ParseFont(fontBytes)
       if err != nil {
+        fmt.Println(fontAddr)
         panic(err)
       }
 
