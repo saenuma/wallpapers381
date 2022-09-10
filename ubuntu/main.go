@@ -83,7 +83,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		defer outFile.Close()
+
 		b := bufio.NewWriter(outFile)
 		err = png.Encode(b, rgba)
 		if err != nil {
@@ -95,6 +95,7 @@ func main() {
 		}
 
 		fmt.Println("Changed the wallpaper @ ", time.Now().String())
+		outFile.Close()
 
 		// sleep for 30 seconds
 		time.Sleep(30 * 60 * time.Second)
