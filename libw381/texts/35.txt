@@ -1,1 +1,0 @@
-Prayer units are needed for answered prayers. It is computed from the number of times you helped others.

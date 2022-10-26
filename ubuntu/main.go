@@ -57,7 +57,7 @@ func main() {
 		fg := image.NewUniform(newColor)
 		bg := image.NewUniform(newColor2)
 
-		draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
+		draw.Draw(rgba, rgba.Bounds(), bg, image.Point{}, draw.Src)
 		c := freetype.NewContext()
 		c.SetDPI(DPI)
 		c.SetFont(fontParsed)
@@ -112,7 +112,7 @@ func GetRootPath() (string, error) {
 		if err != nil {
 			return "", errors.Wrap(err, "os error")
 		}
-		dd = filepath.Join(hd, "wallpapers381_data")
+		dd = filepath.Join(hd, "W381")
 		os.MkdirAll(dd, 0777)
 	}
 
@@ -126,12 +126,7 @@ func DoesPathExists(p string) bool {
 	return true
 }
 
-func getNextTextAddr() string {
-	dirFIs, err := libw381.EmbeddedTexts.ReadDir("texts")
-	if err != nil {
-		panic(err)
-	}
-
+func getNextTextAddr() int {
 	rootPath, _ := GetRootPath()
 	if DoesPathExists(filepath.Join(rootPath, "last_text.txt")) {
 		rawLastText, _ := os.ReadFile(filepath.Join(rootPath, "last_text.txt"))
@@ -140,15 +135,18 @@ func getNextTextAddr() string {
 			panic(err)
 		}
 		toReturnNumber := number + 1
-		if toReturnNumber > len(dirFIs) {
+		tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
+
+		if toReturnNumber > len(strings.Split(tmpAllTexts, "\n")) {
 			toReturnNumber = 1
 		}
 		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(toReturnNumber)), 0777)
-		return fmt.Sprintf("texts/%d.txt", toReturnNumber)
+		return toReturnNumber
 	} else {
 		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte("1"), 0777)
-		return "texts/1.txt"
+		return 1
 	}
+
 }
 
 func wordWrap(text string, writeWidth int, fontDrawer *font.Drawer) []string {
@@ -182,9 +180,8 @@ func getOutputPath() string {
 	return filepath.Join(rootPath, "wallpaper.png")
 }
 
-func getOutputTxt(txtPath string) string {
-	t := strings.ReplaceAll(txtPath, ".txt", "")
-	t = strings.ReplaceAll(t, "texts/", "")
-	textBytes, _ := libw381.EmbeddedTexts.ReadFile(txtPath)
-	return t + ".  " + string(textBytes)
+func getOutputTxt(lineNo int) string {
+	tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
+	allTextsSlice := strings.Split(tmpAllTexts, "\n")
+	return fmt.Sprintf("%d. %s", lineNo, allTextsSlice[lineNo-1])
 }

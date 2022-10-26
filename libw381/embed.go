@@ -1,11 +1,11 @@
 package libw381
 
 import (
-	"embed"
+	_ "embed"
 )
 
-//go:embed texts
-var EmbeddedTexts embed.FS
+//go:embed msgs.txt
+var EmbeddedTexts []byte
 
 //go:embed Barriecito-Regular.ttf
 var FontBytes []byte

@@ -1,1 +1,0 @@
-The difficulty of a factory product can be estimated from the number of components it has.
