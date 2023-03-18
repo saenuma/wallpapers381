@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"image"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -21,9 +25,9 @@ func main() {
 	myWindow := myApp.NewWindow("Wallpapers381 Gallery")
 
 	lineNo := libw381.GetNextTextAddr()
-	img := libw381.MakeAWallpaper(lineNo)
+	wimg := libw381.MakeAWallpaper(lineNo)
 
-	w381Img := canvas.NewImageFromImage(img)
+	w381Img := canvas.NewImageFromImage(wimg)
 	w381Img.FillMode = canvas.ImageFillOriginal
 
 	imageContainer := container.NewCenter(w381Img)
@@ -42,8 +46,8 @@ func main() {
 			return
 		}
 
-		img = libw381.MakeAWallpaper(lineNo)
-		w381Img = canvas.NewImageFromImage(img)
+		wimg = libw381.MakeAWallpaper(lineNo)
+		w381Img = canvas.NewImageFromImage(wimg)
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
 		imageContainer.Add(w381Img)
@@ -52,8 +56,8 @@ func main() {
 
 	nextBtn := widget.NewButton("next", func() {
 		lineNo = libw381.GetNextTextAddr()
-		img = libw381.MakeAWallpaper(lineNo)
-		w381Img = canvas.NewImageFromImage(img)
+		wimg = libw381.MakeAWallpaper(lineNo)
+		w381Img = canvas.NewImageFromImage(wimg)
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
 		imageContainer.Add(w381Img)
@@ -66,8 +70,8 @@ func main() {
 			lineNo = lineNo - 1
 		}
 
-		img = libw381.MakeAWallpaper(lineNo)
-		w381Img = canvas.NewImageFromImage(img)
+		wimg = libw381.MakeAWallpaper(lineNo)
+		w381Img = canvas.NewImageFromImage(wimg)
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
 		imageContainer.Add(w381Img)
@@ -77,13 +81,35 @@ func main() {
 
 	bottomBar := container.New(&halfes{}, prevBtn, nextBtn, jumpEntry)
 	galleryContainer := container.NewVBox(imageContainer, bottomBar)
+
+	// about tab begin
+	saeBtn := widget.NewButton("sae.ng", func() {
+		if runtime.GOOS == "windows" {
+			exec.Command("cmd", "/C", "start", "https://sae.ng").Run()
+		} else if runtime.GOOS == "linux" {
+			exec.Command("xdg-open", "https://sae.ng").Run()
+		}
+	})
+
+	limg, _, err := image.Decode(bytes.NewReader(SaeLogoBytes))
+	if err != nil {
+		panic(err)
+	}
+	logoImage := canvas.NewImageFromImage(limg)
+	logoImage.FillMode = canvas.ImageFillOriginal
+
+	aboutBox := container.NewVBox(
+		widget.NewLabelWithStyle("Brought to You with Love by", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		container.NewCenter(logoImage),
+		widget.NewLabelWithStyle("Saenuma Digital Ltd", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		container.NewCenter(saeBtn),
+	)
+
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Gallery", galleryContainer),
 		container.NewTabItem("Setup Instructions", widget.NewLabel("World!")),
-		container.NewTabItem("About Wallpapers381", widget.NewLabel("About")),
+		container.NewTabItem("About Wallpapers381", aboutBox),
 	)
-
-	//tabs.Append(container.NewTabItemWithIcon("Home", theme.HomeIcon(), widget.NewLabel("Home tab")))
 
 	tabs.SetTabLocation(container.TabLocationTop)
 
