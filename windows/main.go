@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -27,6 +28,28 @@ func main() {
 
 	imageContainer := container.NewCenter(w381Img)
 
+	tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
+	numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
+
+	jumpEntry := widget.NewEntry()
+	jumpEntry.SetText(strconv.Itoa(lineNo))
+	jumpEntry.OnSubmitted = func(s string) {
+		lineNo, err := strconv.Atoi(s)
+		if err != nil {
+			return
+		}
+		if lineNo > numberOfTexts {
+			return
+		}
+
+		img = libw381.MakeAWallpaper(lineNo)
+		w381Img = canvas.NewImageFromImage(img)
+		w381Img.FillMode = canvas.ImageFillOriginal
+		imageContainer.RemoveAll()
+		imageContainer.Add(w381Img)
+		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
+	}
+
 	nextBtn := widget.NewButton("next", func() {
 		lineNo = libw381.GetNextTextAddr()
 		img = libw381.MakeAWallpaper(lineNo)
@@ -34,6 +57,7 @@ func main() {
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
 		imageContainer.Add(w381Img)
+		jumpEntry.SetText(strconv.Itoa(lineNo))
 	})
 	nextBtn.Importance = widget.HighImportance
 
@@ -41,16 +65,17 @@ func main() {
 		if lineNo != 1 {
 			lineNo = lineNo - 1
 		}
-		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
 
 		img = libw381.MakeAWallpaper(lineNo)
 		w381Img = canvas.NewImageFromImage(img)
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
 		imageContainer.Add(w381Img)
+		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
+		jumpEntry.SetText(strconv.Itoa(lineNo))
 	})
 
-	bottomBar := container.New(&halfes{}, prevBtn, nextBtn)
+	bottomBar := container.New(&halfes{}, prevBtn, nextBtn, jumpEntry)
 	galleryContainer := container.NewVBox(imageContainer, bottomBar)
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Gallery", galleryContainer),
