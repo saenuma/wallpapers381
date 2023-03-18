@@ -2,19 +2,23 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"image"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/disintegration/imaging"
 	"github.com/saenuma/wallpapers381/libw381"
 )
 
@@ -24,6 +28,54 @@ func main() {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Wallpapers381 Gallery")
 
+	// update slideshow store
+	tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
+	numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
+
+	numberOfCPUS := runtime.NumCPU()
+	var wg sync.WaitGroup
+	jobsPerThread := int(math.Floor(float64(numberOfTexts) / float64(numberOfCPUS)))
+
+	installedVersion := ""
+	rawVersion, err := os.ReadFile(filepath.Join(rootPath, "version.txt"))
+	if err != nil {
+		installedVersion = "undefined"
+	}
+	installedVersion = strings.TrimSpace(string(rawVersion))
+
+	if W381_IMAGES_VERSION != installedVersion {
+		hd, _ := os.UserHomeDir()
+		os.MkdirAll(filepath.Join(hd, "Wallpapers381"), 0777)
+
+		for threadIndex := 0; threadIndex < numberOfCPUS; threadIndex++ {
+			wg.Add(1)
+			startIndex := threadIndex * jobsPerThread
+			endIndex := (threadIndex + 1) * jobsPerThread
+
+			go func(startIndex, endIndex int, wg *sync.WaitGroup) {
+				defer wg.Done()
+
+				for index := startIndex; index < endIndex; index++ {
+					if index == 0 {
+						continue
+					}
+
+					img := libw381.MakeAWallpaper(index)
+					imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
+				}
+			}(startIndex, endIndex, &wg)
+		}
+		wg.Wait()
+
+		for index := (jobsPerThread * numberOfCPUS); index < numberOfTexts; index++ {
+			img := libw381.MakeAWallpaper(index)
+			imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
+		}
+
+		os.WriteFile(filepath.Join(rootPath, "version.txt"), []byte(W381_IMAGES_VERSION), 0777)
+	}
+
+	// gallery tab begin
 	lineNo := libw381.GetNextTextAddr()
 	wimg := libw381.MakeAWallpaper(lineNo)
 
@@ -31,9 +83,6 @@ func main() {
 	w381Img.FillMode = canvas.ImageFillOriginal
 
 	imageContainer := container.NewCenter(w381Img)
-
-	tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
-	numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
 
 	jumpEntry := widget.NewEntry()
 	jumpEntry.SetText(strconv.Itoa(lineNo))
@@ -82,6 +131,16 @@ func main() {
 	bottomBar := container.New(&halfes{}, prevBtn, nextBtn, jumpEntry)
 	galleryContainer := container.NewVBox(imageContainer, bottomBar)
 
+	// setup tab begin
+	setupLabel := widget.NewRichTextFromMarkdown(`# Setup Instructions
+1. Launch the App (needed to update the wallpapers store)
+2. Open Settings.
+3. Click **Personalisation** on the left and then click background
+4. Set the first select to **Slideshow**
+5. Click **Browse** and navigate to **User/wallpapers381** 
+6. Repeat this instructions after update.
+	`)
+
 	// about tab begin
 	saeBtn := widget.NewButton("sae.ng", func() {
 		if runtime.GOOS == "windows" {
@@ -107,7 +166,7 @@ func main() {
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Gallery", galleryContainer),
-		container.NewTabItem("Setup Instructions", widget.NewLabel("World!")),
+		container.NewTabItem("Setup Instructions", setupLabel),
 		container.NewTabItem("About Wallpapers381", aboutBox),
 	)
 
