@@ -3,8 +3,10 @@ module github.com/saenuma/wallpapers381
 go 1.16
 
 require (
-	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+	fyne.io/fyne/v2 v2.3.1
+	github.com/disintegration/imaging v1.6.2
+	github.com/goki/freetype v0.0.0-20220119013949-7a161fd3728c
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/pkg/errors v0.9.1
-	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
+	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd
 )
