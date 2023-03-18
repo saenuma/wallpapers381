@@ -45,6 +45,9 @@ func main() {
 
 	if W381_IMAGES_VERSION != installedVersion {
 		hd, _ := os.UserHomeDir()
+		if libw381.DoesPathExists(filepath.Join(hd, "Wallpapers381")) {
+			os.RemoveAll(filepath.Join(hd, "Wallpapers381"))
+		}
 		os.MkdirAll(filepath.Join(hd, "Wallpapers381"), 0777)
 
 		for threadIndex := 0; threadIndex < numberOfCPUS; threadIndex++ {
@@ -132,14 +135,16 @@ func main() {
 	galleryContainer := container.NewVBox(imageContainer, bottomBar)
 
 	// setup tab begin
-	setupLabel := widget.NewRichTextFromMarkdown(`# Setup Instructions
+	hd, _ := os.UserHomeDir()
+	path := filepath.Join(hd, "Wallpapers381")
+	setupLabel := widget.NewRichTextFromMarkdown(fmt.Sprintf(`# Setup Instructions
 1. Launch the App (needed to update the wallpapers store)
 2. Open Settings.
 3. Click **Personalisation** on the left and then click background
 4. Set the first select to **Slideshow**
-5. Click **Browse** and navigate to **User/wallpapers381** 
+5. Click **Browse** and navigate to **%s** 
 6. Repeat this instructions after update.
-	`)
+	`, path))
 
 	// about tab begin
 	saeBtn := widget.NewButton("sae.ng", func() {
