@@ -101,9 +101,8 @@ A name must be rare. This would reduce confusion.
 Queuing up would drop the cost of your factory.
 Cheap products could mean something is missing.
 God takes care of the birds, so God can take care of you.
-May the sons of Sodica keep us safe. Amen.
 A teacher is never wealthy. Wealth has become a bad standard for judging.
-A new factory object must be baptized by the Factory Lords.
+A new factory object must be baptized (reviewed) by the Factory Lords.
 Iron is the name of a category of materials not used in Creature factories.
 Some raw materials are samples. Beware.
 I didn't think of this business. I actually corrected a bad business.
