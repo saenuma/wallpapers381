@@ -18,6 +18,14 @@ parts:
     # See 'snapcraft plugins'
     plugin: go
     source: .
+    build-snaps:
+      - go
+    build-packages:
+      - build-essential
+      - gcc
+      - libgl1-mesa-dev
+      - xorg-dev
+      - libc6-dev
 
 
 apps:
