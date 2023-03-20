@@ -23,6 +23,8 @@ import (
 )
 
 func main() {
+	os.Setenv("FYNE_THEME", "light")
+
 	rootPath, _ := libw381.GetGUIPath()
 
 	myApp := app.New()
