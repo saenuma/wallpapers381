@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	rootPath, _ := libw381.GetRootPath()
+	rootPath, _ := libw381.GetGUIPath()
 
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Wallpapers381 Gallery")
@@ -81,7 +81,7 @@ func main() {
 	}
 
 	// gallery tab begin
-	lineNo := libw381.GetNextTextAddr()
+	lineNo := libw381.GetNextTextAddr(1)
 	wimg := libw381.MakeAWallpaper(lineNo)
 
 	w381Img := canvas.NewImageFromImage(wimg)
@@ -109,7 +109,7 @@ func main() {
 	}
 
 	nextBtn := widget.NewButton("next", func() {
-		lineNo = libw381.GetNextTextAddr()
+		lineNo = libw381.GetNextTextAddr(1)
 		wimg = libw381.MakeAWallpaper(lineNo)
 		w381Img = canvas.NewImageFromImage(wimg)
 		w381Img.FillMode = canvas.ImageFillOriginal

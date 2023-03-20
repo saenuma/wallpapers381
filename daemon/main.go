@@ -11,7 +11,7 @@ import (
 func main() {
 
 	for {
-		lineNo := libw381.GetNextTextAddr()
+		lineNo := libw381.GetNextTextAddr(2)
 		img := libw381.MakeAWallpaper(lineNo)
 		outPath := getOutputPath()
 
@@ -26,6 +26,6 @@ func main() {
 }
 
 func getOutputPath() string {
-	rootPath, _ := libw381.GetRootPath()
+	rootPath, _ := libw381.GetDaemonPath()
 	return filepath.Join(rootPath, "wallpaper.png")
 }

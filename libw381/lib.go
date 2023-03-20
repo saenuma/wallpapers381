@@ -105,8 +105,22 @@ func MakeAWallpaper(lineNo int) image.Image {
 	return rgba
 }
 
-func GetRootPath() (string, error) {
+func GetDaemonPath() (string, error) {
 	dd := os.Getenv("SNAP_COMMON")
+	if strings.HasPrefix(dd, "/var/snap/go") || dd == "" {
+		hd, err := os.UserHomeDir()
+		if err != nil {
+			return "", errors.Wrap(err, "os error")
+		}
+		dd = filepath.Join(hd, "W381")
+		os.MkdirAll(dd, 0777)
+	}
+
+	return dd, nil
+}
+
+func GetGUIPath() (string, error) {
+	dd := os.Getenv("SNAP_USER_COMMON")
 	if strings.HasPrefix(dd, "/var/snap/go") || dd == "" {
 		hd, err := os.UserHomeDir()
 		if err != nil {
@@ -126,10 +140,18 @@ func DoesPathExists(p string) bool {
 	return true
 }
 
-func GetNextTextAddr() int {
-	rootPath, _ := GetRootPath()
-	if DoesPathExists(filepath.Join(rootPath, "last_text.txt")) {
-		rawLastText, _ := os.ReadFile(filepath.Join(rootPath, "last_text.txt"))
+func GetNextTextAddr(method int) int {
+	usePath := ""
+	if method == 1 {
+		tmp, _ := GetGUIPath()
+		usePath = tmp
+	} else {
+		tmp, _ := GetDaemonPath()
+		usePath = tmp
+	}
+
+	if DoesPathExists(filepath.Join(usePath, "last_text.txt")) {
+		rawLastText, _ := os.ReadFile(filepath.Join(usePath, "last_text.txt"))
 		number, err := strconv.Atoi(strings.TrimSpace(string(rawLastText)))
 		if err != nil {
 			panic(err)
@@ -140,10 +162,10 @@ func GetNextTextAddr() int {
 		if toReturnNumber > len(strings.Split(tmpAllTexts, "\n")) {
 			toReturnNumber = 1
 		}
-		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(toReturnNumber)), 0777)
+		os.WriteFile(filepath.Join(usePath, "last_text.txt"), []byte(strconv.Itoa(toReturnNumber)), 0777)
 		return toReturnNumber
 	} else {
-		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte("1"), 0777)
+		os.WriteFile(filepath.Join(usePath, "last_text.txt"), []byte("1"), 0777)
 		return 1
 	}
 
