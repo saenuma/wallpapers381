@@ -18,17 +18,14 @@ parts:
     # See 'snapcraft plugins'
     plugin: go
     source: .
-    override-build: |
-      set -xe
-      go mod download
-      go build -o $SNAPCRAFT_PART_INSTALL/bin/wallpapers381 ./ubuntu
-      go build -o $SNAPCRAFT_PART_INSTALL/bin/switch ./ubuntu_switch
-
 
 
 apps:
   wallpapers381:
     command: bin/wallpapers381
+    
+  daemon:
+    command: bin/daemon
     daemon: simple
     restart-condition: on-abnormal
 

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Version=1.0.0
+Type=Application
+Name=Wallpapers381
+Exec=wallpapers381
+Icon=${SNAP}/meta/gui/wallpapers381.png

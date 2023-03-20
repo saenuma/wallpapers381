@@ -32,50 +32,52 @@ func main() {
 	tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
 	numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
 
-	numberOfCPUS := runtime.NumCPU()
-	var wg sync.WaitGroup
-	jobsPerThread := int(math.Floor(float64(numberOfTexts) / float64(numberOfCPUS)))
+	if runtime.GOOS == "windows" {
+		numberOfCPUS := runtime.NumCPU()
+		var wg sync.WaitGroup
+		jobsPerThread := int(math.Floor(float64(numberOfTexts) / float64(numberOfCPUS)))
 
-	installedVersion := ""
-	rawVersion, err := os.ReadFile(filepath.Join(rootPath, "version.txt"))
-	if err != nil {
-		installedVersion = "undefined"
-	}
-	installedVersion = strings.TrimSpace(string(rawVersion))
-
-	if W381_IMAGES_VERSION != installedVersion {
-		hd, _ := os.UserHomeDir()
-		if libw381.DoesPathExists(filepath.Join(hd, "Wallpapers381")) {
-			os.RemoveAll(filepath.Join(hd, "Wallpapers381"))
+		installedVersion := ""
+		rawVersion, err := os.ReadFile(filepath.Join(rootPath, "version.txt"))
+		if err != nil {
+			installedVersion = "undefined"
 		}
-		os.MkdirAll(filepath.Join(hd, "Wallpapers381"), 0777)
+		installedVersion = strings.TrimSpace(string(rawVersion))
 
-		for threadIndex := 0; threadIndex < numberOfCPUS; threadIndex++ {
-			wg.Add(1)
-			startIndex := threadIndex * jobsPerThread
-			endIndex := (threadIndex + 1) * jobsPerThread
+		if W381_IMAGES_VERSION != installedVersion {
+			hd, _ := os.UserHomeDir()
+			if libw381.DoesPathExists(filepath.Join(hd, "Wallpapers381")) {
+				os.RemoveAll(filepath.Join(hd, "Wallpapers381"))
+			}
+			os.MkdirAll(filepath.Join(hd, "Wallpapers381"), 0777)
 
-			go func(startIndex, endIndex int, wg *sync.WaitGroup) {
-				defer wg.Done()
+			for threadIndex := 0; threadIndex < numberOfCPUS; threadIndex++ {
+				wg.Add(1)
+				startIndex := threadIndex * jobsPerThread
+				endIndex := (threadIndex + 1) * jobsPerThread
 
-				for index := startIndex; index < endIndex; index++ {
-					if index == 0 {
-						continue
+				go func(startIndex, endIndex int, wg *sync.WaitGroup) {
+					defer wg.Done()
+
+					for index := startIndex; index < endIndex; index++ {
+						if index == 0 {
+							continue
+						}
+
+						img := libw381.MakeAWallpaper(index)
+						imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
 					}
+				}(startIndex, endIndex, &wg)
+			}
+			wg.Wait()
 
-					img := libw381.MakeAWallpaper(index)
-					imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
-				}
-			}(startIndex, endIndex, &wg)
+			for index := (jobsPerThread * numberOfCPUS); index < numberOfTexts; index++ {
+				img := libw381.MakeAWallpaper(index)
+				imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
+			}
+
+			os.WriteFile(filepath.Join(rootPath, "version.txt"), []byte(W381_IMAGES_VERSION), 0777)
 		}
-		wg.Wait()
-
-		for index := (jobsPerThread * numberOfCPUS); index < numberOfTexts; index++ {
-			img := libw381.MakeAWallpaper(index)
-			imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
-		}
-
-		os.WriteFile(filepath.Join(rootPath, "version.txt"), []byte(W381_IMAGES_VERSION), 0777)
 	}
 
 	// gallery tab begin
@@ -85,7 +87,7 @@ func main() {
 	w381Img := canvas.NewImageFromImage(wimg)
 	w381Img.FillMode = canvas.ImageFillOriginal
 
-	imageContainer := container.NewCenter(w381Img)
+	imageContainer := container.NewCenter(container.NewPadded(w381Img))
 
 	jumpEntry := widget.NewEntry()
 	jumpEntry.SetText(strconv.Itoa(lineNo))
@@ -102,7 +104,7 @@ func main() {
 		w381Img = canvas.NewImageFromImage(wimg)
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
-		imageContainer.Add(w381Img)
+		imageContainer.Add(container.NewPadded(w381Img))
 		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
 	}
 
@@ -112,7 +114,7 @@ func main() {
 		w381Img = canvas.NewImageFromImage(wimg)
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
-		imageContainer.Add(w381Img)
+		imageContainer.Add(container.NewPadded(w381Img))
 		jumpEntry.SetText(strconv.Itoa(lineNo))
 	})
 	nextBtn.Importance = widget.HighImportance
@@ -126,7 +128,7 @@ func main() {
 		w381Img = canvas.NewImageFromImage(wimg)
 		w381Img.FillMode = canvas.ImageFillOriginal
 		imageContainer.RemoveAll()
-		imageContainer.Add(w381Img)
+		imageContainer.Add(container.NewPadded(w381Img))
 		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
 		jumpEntry.SetText(strconv.Itoa(lineNo))
 	})
@@ -134,17 +136,30 @@ func main() {
 	bottomBar := container.New(&halfes{}, prevBtn, nextBtn, jumpEntry)
 	galleryContainer := container.NewVBox(imageContainer, bottomBar)
 
+	tabs := container.NewAppTabs(
+		container.NewTabItem("Gallery", galleryContainer),
+	)
+
 	// setup tab begin
-	hd, _ := os.UserHomeDir()
-	path := filepath.Join(hd, "Wallpapers381")
-	setupLabel := widget.NewRichTextFromMarkdown(fmt.Sprintf(`# Setup Instructions
-1. Launch the App (needed to update the wallpapers store)
-2. Open Settings.
-3. Click **Personalisation** on the left and then click background
-4. Set the first select to **Slideshow**
-5. Click **Browse** and navigate to **%s** 
-6. Repeat this instructions after update.
-	`, path))
+	if runtime.GOOS == "windows" {
+		hd, _ := os.UserHomeDir()
+		path := filepath.Join(hd, "Wallpapers381")
+		setupLabel := widget.NewRichTextFromMarkdown(fmt.Sprintf(`# Setup Instructions
+	1. Launch the App (needed to update the wallpapers store)
+	2. Open Settings.
+	3. Click **Personalisation** on the left and then click background
+	4. Set the first select to **Slideshow**
+	5. Click **Browse** and navigate to **%s** 
+	6. Repeat this instructions after update.
+		`, path))
+
+		tabs.Append(container.NewTabItem("Setup Instructions", setupLabel))
+	} else {
+		switchBtn := widget.NewButton("Switch to Wallpapers381", func() {
+			exec.Command("wallpapers381.switch").Run()
+		})
+		tabs.Append(container.NewTabItem("Setup Instructions", container.NewPadded(container.NewVBox(switchBtn))))
+	}
 
 	// about tab begin
 	saeBtn := widget.NewButton("sae.ng", func() {
@@ -169,11 +184,7 @@ func main() {
 		container.NewCenter(saeBtn),
 	)
 
-	tabs := container.NewAppTabs(
-		container.NewTabItem("Gallery", galleryContainer),
-		container.NewTabItem("Setup Instructions", setupLabel),
-		container.NewTabItem("About Wallpapers381", aboutBox),
-	)
+	tabs.Append(container.NewTabItem("About Wallpapers381", aboutBox))
 
 	tabs.SetTabLocation(container.TabLocationTop)
 
