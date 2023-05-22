@@ -157,10 +157,13 @@ func main() {
 
 		tabs.Append(container.NewTabItem("Setup Instructions", setupLabel))
 	} else {
-		switchBtn := widget.NewButton("Switch to Wallpapers381", func() {
-			exec.Command("wallpapers381.switch").Run()
-		})
-		tabs.Append(container.NewTabItem("Setup Instructions", container.NewPadded(container.NewVBox(switchBtn))))
+		setupLabel := widget.NewRichTextFromMarkdown(`# Setup Instructions
+1.	Launch the terminal
+
+2.	Run the program **wallpapers381.switch**
+
+		`)
+		tabs.Append(container.NewTabItem("Setup Instructions", setupLabel))
 	}
 
 	// about tab begin
