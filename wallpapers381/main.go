@@ -147,12 +147,13 @@ func main() {
 		hd, _ := os.UserHomeDir()
 		path := filepath.Join(hd, "Wallpapers381")
 		setupLabel := widget.NewRichTextFromMarkdown(fmt.Sprintf(`# Setup Instructions
-	1. Launch the App (needed to update the wallpapers store)
-	2. Open Settings.
-	3. Click **Personalisation** on the left and then click background
-	4. Set the first select to **Slideshow**
-	5. Click **Browse** and navigate to **%s** 
-	6. Repeat this instructions after update.
+		
+1. Launch the App (needed to update the wallpapers store)
+2. Open Settings.
+3. Click **Personalisation** on the left and then click background
+4. Set the first select to **Slideshow**
+5. Click **Browse** and navigate to **%s** 
+6. Repeat this instructions after update.
 		`, path))
 
 		tabs.Append(container.NewTabItem("Setup Instructions", setupLabel))
