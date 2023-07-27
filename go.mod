@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	fyne.io/fyne/v2 v2.3.5
-	github.com/benoitkugler/textlayout v0.3.0 // indirect
 	github.com/disintegration/imaging v1.6.2
 	github.com/fredbi/uri v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -12,7 +11,7 @@ require (
 	github.com/fyne-io/glfw-js v0.0.0-20220517201726-bebc2019cd33 // indirect
 	github.com/fyne-io/image v0.0.0-20221020213044-f609c6a24345 // indirect
 	github.com/go-text/typesetting v0.0.0-20230723131405-1ab587dd27cf // indirect
-	github.com/goki/freetype v1.0.1
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/pkg/errors v0.9.1

@@ -120,7 +120,6 @@ func main() {
 		imageContainer.Add(container.NewPadded(w381Img))
 		jumpEntry.SetText(strconv.Itoa(lineNo))
 	})
-	nextBtn.Importance = widget.HighImportance
 
 	prevBtn := widget.NewButton("previous", func() {
 		if lineNo != 1 {

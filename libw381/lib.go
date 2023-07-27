@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/goki/freetype"
-	"github.com/goki/freetype/truetype"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/pkg/errors"
 	"golang.org/x/image/font"
