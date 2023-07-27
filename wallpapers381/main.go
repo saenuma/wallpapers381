@@ -17,6 +17,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"github.com/disintegration/imaging"
 	"github.com/saenuma/wallpapers381/libw381"
@@ -135,18 +136,14 @@ func main() {
 		jumpEntry.SetText(strconv.Itoa(lineNo))
 	})
 
-	bottomBar := container.New(&halfes{}, prevBtn, nextBtn, jumpEntry)
-	galleryContainer := container.NewVBox(imageContainer, bottomBar)
+	setupInstructionsBtn := widget.NewButton("Setup Instructions", func() {
 
-	tabs := container.NewAppTabs(
-		container.NewTabItem("Gallery", galleryContainer),
-	)
+		var setupLabel *widget.RichText
 
-	// setup tab begin
-	if runtime.GOOS == "windows" {
-		hd, _ := os.UserHomeDir()
-		path := filepath.Join(hd, "Wallpapers381")
-		setupLabel := widget.NewRichTextFromMarkdown(fmt.Sprintf(`# Setup Instructions
+		if runtime.GOOS == "windows" {
+			hd, _ := os.UserHomeDir()
+			path := filepath.Join(hd, "Wallpapers381")
+			setupLabel = widget.NewRichTextFromMarkdown(fmt.Sprintf(`# Setup Instructions
 		
 1. Launch the App (needed to update the wallpapers store)
 2. Open Settings.
@@ -154,20 +151,21 @@ func main() {
 4. Set the first select to **Slideshow**
 5. Click **Browse** and navigate to **%s** 
 6. Repeat this instructions after update.
-		`, path))
+			`, path))
 
-		tabs.Append(container.NewTabItem("Setup Instructions", setupLabel))
-	} else {
-		setupLabel := widget.NewRichTextFromMarkdown(`# Setup Instructions
+		} else {
+			setupLabel = widget.NewRichTextFromMarkdown(`# Setup Instructions
 1.	Launch the terminal
 
 2.	Run the program **wallpapers381.switch**
 
-		`)
-		tabs.Append(container.NewTabItem("Setup Instructions", setupLabel))
-	}
+			`)
+		}
 
-	// about tab begin
+		innerBox := container.New(&FillSpace{}, container.NewMax(setupLabel))
+		dialog.ShowCustom("Sample Lyrics File", "Close", innerBox, myWindow)
+	})
+
 	saeBtn := widget.NewButton("sae.ng", func() {
 		if runtime.GOOS == "windows" {
 			exec.Command("cmd", "/C", "start", "https://sae.ng").Run()
@@ -176,26 +174,27 @@ func main() {
 		}
 	})
 
-	limg, _, err := image.Decode(bytes.NewReader(SaeLogoBytes))
-	if err != nil {
-		panic(err)
-	}
-	logoImage := canvas.NewImageFromImage(limg)
-	logoImage.FillMode = canvas.ImageFillOriginal
+	aboutBtn := widget.NewButton("About Us", func() {
+		img, _, err := image.Decode(bytes.NewReader(SaeLogoBytes))
+		if err != nil {
+			panic(err)
+		}
+		logoImage := canvas.NewImageFromImage(img)
+		logoImage.FillMode = canvas.ImageFillOriginal
 
-	aboutBox := container.NewVBox(
-		widget.NewLabelWithStyle("Brought to You with Love by", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		container.NewCenter(logoImage),
-		widget.NewLabelWithStyle("Saenuma Digital Ltd", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		container.NewCenter(saeBtn),
-	)
+		boxes := container.NewVBox(
+			container.NewCenter(logoImage),
+			widget.NewLabelWithStyle("Brought to You with Love by", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+			saeBtn,
+		)
+		dialog.ShowCustom("About Wallpapers381", "Close", boxes, myWindow)
+	})
 
-	tabs.Append(container.NewTabItem("About Wallpapers381", aboutBox))
+	topBar := container.New(&halfes{}, prevBtn, nextBtn, jumpEntry, widget.NewSeparator(), setupInstructionsBtn, aboutBtn)
+	galleryContainer := container.NewVBox(topBar, imageContainer)
 
-	tabs.SetTabLocation(container.TabLocationTop)
+	myWindow.SetContent(galleryContainer)
 
-	myWindow.SetContent(tabs)
-
-	myWindow.Resize(fyne.NewSize(1200, 700))
+	myWindow.Resize(fyne.NewSize(1100, 600))
 	myWindow.ShowAndRun()
 }
