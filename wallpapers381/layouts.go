@@ -33,3 +33,20 @@ func (d *halfes) Layout(objects []fyne.CanvasObject, containerSize fyne.Size) {
 		pos = pos.Add(fyne.NewPos(newSize.Width, 0))
 	}
 }
+
+type FillSpace struct{}
+
+func (d *FillSpace) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	return fyne.NewSize(600, 400)
+}
+
+func (d *FillSpace) Layout(objects []fyne.CanvasObject, containerSize fyne.Size) {
+	pos := fyne.NewPos(0, 0)
+	// for _, o := range objects {
+	newHeight := containerSize.Height - 10
+	newSize := fyne.NewSize(containerSize.Width, newHeight)
+	objects[0].Resize(newSize)
+	objects[0].Move(pos)
+	// pos = pos.Add(fyne.NewPos(0, newHeight+10))
+	// }
+}
