@@ -5,11 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"time"
 
 	g143 "github.com/bankole7782/graphics143"
+	"github.com/disintegration/imaging"
 	"github.com/fogleman/gg"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/saenuma/wallpapers381/libw381"
 )
 
 const (
@@ -18,6 +21,7 @@ const (
 
 var objCoords map[g143.RectSpecs]any
 var currentWindowFrame image.Image
+var lineNo int
 
 // symbols types
 type NextButton struct{}
@@ -25,6 +29,7 @@ type PrevButton struct{}
 type WallpaperNumberEntry struct{}
 type SetupInstrsButton struct{}
 type ColorsButton struct{}
+type OurSite struct{}
 
 func main() {
 	runtime.LockOSThread()
@@ -107,8 +112,10 @@ func allDraws(window *glfw.Window) {
 		OriginY: 10}
 	objCoords[wNumEntryRS] = WallpaperNumberEntry{}
 
+	lineNo = libw381.GetNextTextAddr(1)
+	lineNoStr := strconv.Itoa(lineNo)
 	ggCtx.SetHexColor("#444")
-	ggCtx.DrawString("1", float64(wNumEntryOriginX+15), 35)
+	ggCtx.DrawString(lineNoStr, float64(wNumEntryOriginX+15), 35)
 
 	// setup instructions button
 	ggCtx.SetHexColor("#D090CB")
@@ -141,6 +148,26 @@ func allDraws(window *glfw.Window) {
 
 	ggCtx.SetHexColor("#444")
 	ggCtx.DrawString(colorsStr, float64(colorsBtnOriginX+25), 35)
+
+	// display current wallpaper
+	wimg := libw381.MakeAWallpaper(lineNo)
+
+	w381OriginY := (colorsBtnRS.Height + 40)
+	w381Width := wWidth - 20
+	w381Height := wHeight - (w381OriginY)
+
+	wimg = imaging.Fit(wimg, w381Width, w381Height, imaging.Lanczos)
+	ggCtx.DrawImage(wimg, 10, w381OriginY)
+
+	// draw our site below
+	ggCtx.SetHexColor("#9C5858")
+	fromAddr := "sae.ng"
+	fromAddrWidth, fromAddrHeight := ggCtx.MeasureString(fromAddr)
+	fromAddrOriginX := (wWidth - int(fromAddrWidth)) / 2
+	ggCtx.DrawString(fromAddr, float64(fromAddrOriginX), float64(wHeight-int(fromAddrHeight)))
+	fars := g143.RectSpecs{OriginX: fromAddrOriginX, OriginY: wHeight - 40,
+		Width: int(fromAddrWidth), Height: 40}
+	objCoords[fars] = OurSite{}
 
 	// send the frame to glfw window
 	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
