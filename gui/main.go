@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	g143 "github.com/bankole7782/graphics143"
@@ -23,6 +24,8 @@ const (
 var objCoords map[g143.RectSpecs]any
 var currentWindowFrame image.Image
 var lineNo int
+var wNumEntryActive bool
+var enteredText string
 
 // symbols types
 type NextButton struct{}
@@ -115,6 +118,7 @@ func allDraws(window *glfw.Window) {
 
 	lineNo = libw381.GetNextTextAddr(1)
 	lineNoStr := strconv.Itoa(lineNo)
+	enteredText = lineNoStr
 	ggCtx.SetHexColor("#444")
 	ggCtx.DrawString(lineNoStr, float64(wNumEntryOriginX+15), 35)
 
@@ -215,6 +219,8 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		// store wNumEntryRS
 		if _, ok := anyObj.(WallpaperNumberEntry); ok {
 			wNumEntryRS = rs
+		} else {
+			wNumEntryActive = false
 		}
 	}
 
@@ -226,6 +232,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 	switch obj.(type) {
 	case PrevButton:
+		wNumEntryActive = false
 		if lineNo != 1 {
 			lineNo = lineNo - 1
 		}
@@ -250,6 +257,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 		// update the display of line number
 		lineNoStr := strconv.Itoa(lineNo)
+		enteredText = lineNoStr
 		ggCtx.SetHexColor("#fff")
 		ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
 			float64(wNumEntryRS.Width), float64(colorsBtnRS.Height-15))
@@ -268,6 +276,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		currentWindowFrame = ggCtx.Image()
 
 	case NextButton:
+		wNumEntryActive = false
 		lineNo = libw381.GetNextTextAddr(1)
 
 		ggCtx := gg.NewContextForImage(currentWindowFrame)
@@ -290,6 +299,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 		// update the display of line number
 		lineNoStr := strconv.Itoa(lineNo)
+		enteredText = lineNoStr
 		ggCtx.SetHexColor("#fff")
 		ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
 			float64(wNumEntryRS.Width), float64(colorsBtnRS.Height-15))
@@ -307,12 +317,18 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		// save the frame
 		currentWindowFrame = ggCtx.Image()
 
+	case WallpaperNumberEntry:
+		wNumEntryActive = true
+
 	case OurSite:
+		wNumEntryActive = false
+
 		if runtime.GOOS == "windows" {
 			exec.Command("cmd", "/C", "start", "https://sae.ng").Run()
 		} else if runtime.GOOS == "linux" {
 			exec.Command("xdg-open", "https://sae.ng").Run()
 		}
+
 	}
 }
 
@@ -321,4 +337,89 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 		return
 	}
 
+	if !wNumEntryActive {
+		return
+	}
+
+	rootPath, _ := libw381.GetGUIPath()
+	wWidth, wHeight := window.GetSize()
+
+	var wNumEntryRS, colorsBtnRS g143.RectSpecs
+	for k, v := range objCoords {
+		if _, ok := v.(WallpaperNumberEntry); ok {
+			wNumEntryRS = k
+		}
+		if _, ok := v.(ColorsButton); ok {
+			colorsBtnRS = k
+		}
+	}
+
+	// enforce number types
+	if isKeyNumeric(key) {
+		enteredText += glfw.GetKeyName(key, scancode)
+	} else if key == glfw.KeyBackspace && len(enteredText) != 0 {
+		enteredText = enteredText[:len(enteredText)-1]
+	}
+
+	fontPath := getDefaultFontPath()
+	ggCtx := gg.NewContextForImage(currentWindowFrame)
+	err := ggCtx.LoadFontFace(fontPath, 20)
+	if err != nil {
+		panic(err)
+	}
+
+	ggCtx.SetHexColor("#fff")
+	ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
+		float64(wNumEntryRS.Width), float64(colorsBtnRS.Height-15))
+	ggCtx.Fill()
+
+	ggCtx.SetHexColor("#444")
+	ggCtx.DrawString(enteredText, float64(wNumEntryRS.OriginX+15), 35)
+
+	if key == glfw.KeyEnter {
+		// check validity of entered number
+		tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
+		numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
+
+		tmp, err := strconv.Atoi(enteredText)
+		if err != nil {
+			return
+		}
+		if tmp > numberOfTexts {
+			return
+		}
+
+		lineNo = tmp
+		// update the image
+		wimg := libw381.MakeAWallpaper(lineNo)
+		w381OriginY := (colorsBtnRS.Height + 40)
+		w381Width := wWidth - 20
+		w381Height := wHeight - (w381OriginY)
+
+		wimg = imaging.Fit(wimg, w381Width, w381Height, imaging.Lanczos)
+		ggCtx.DrawImage(wimg, 10, w381OriginY)
+
+		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
+	}
+
+	// send the frame to glfw window
+	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+	g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
+	window.SwapBuffers()
+
+	// save the frame
+	currentWindowFrame = ggCtx.Image()
+}
+
+func isKeyNumeric(key glfw.Key) bool {
+	numKeys := []glfw.Key{glfw.Key0, glfw.Key1, glfw.Key2, glfw.Key3, glfw.Key4,
+		glfw.Key5, glfw.Key6, glfw.Key7, glfw.Key8, glfw.Key9}
+
+	for _, numKey := range numKeys {
+		if key == numKey {
+			return true
+		}
+	}
+
+	return false
 }
