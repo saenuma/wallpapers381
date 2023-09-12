@@ -266,7 +266,46 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 		// save the frame
 		currentWindowFrame = ggCtx.Image()
+
 	case NextButton:
+		lineNo = libw381.GetNextTextAddr(1)
+
+		ggCtx := gg.NewContextForImage(currentWindowFrame)
+
+		// update the image
+		wimg := libw381.MakeAWallpaper(lineNo)
+		w381OriginY := (colorsBtnRS.Height + 40)
+		w381Width := wWidth - 20
+		w381Height := wHeight - (w381OriginY)
+
+		wimg = imaging.Fit(wimg, w381Width, w381Height, imaging.Lanczos)
+		ggCtx.DrawImage(wimg, 10, w381OriginY)
+
+		// load font
+		fontPath := getDefaultFontPath()
+		err := ggCtx.LoadFontFace(fontPath, 20)
+		if err != nil {
+			panic(err)
+		}
+
+		// update the display of line number
+		lineNoStr := strconv.Itoa(lineNo)
+		ggCtx.SetHexColor("#fff")
+		ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
+			float64(wNumEntryRS.Width), float64(colorsBtnRS.Height-15))
+		ggCtx.Fill()
+
+		ggCtx.SetHexColor("#444")
+		ggCtx.DrawString(lineNoStr, float64(wNumEntryRS.OriginX+15), 35)
+		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
+
+		// send the frame to glfw window
+		windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+		g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
+		window.SwapBuffers()
+
+		// save the frame
+		currentWindowFrame = ggCtx.Image()
 
 	case OurSite:
 		if runtime.GOOS == "windows" {
