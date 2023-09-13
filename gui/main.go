@@ -26,6 +26,7 @@ var currentWindowFrame image.Image
 var lineNo int
 var wNumEntryActive bool
 var enteredText string
+var tmpFrame image.Image
 
 // symbols types
 type NextButton struct{}
@@ -329,6 +330,19 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 			exec.Command("xdg-open", "https://sae.ng").Run()
 		}
 
+	case SetupInstrsButton:
+		tmpFrame = currentWindowFrame
+
+		drawSetupInstr(window, currentWindowFrame)
+
+	case DialogCloseButton:
+		// send the frame to glfw window
+		windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+		g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
+		window.SwapBuffers()
+
+		currentWindowFrame = tmpFrame
+		tmpFrame = nil
 	}
 }
 
