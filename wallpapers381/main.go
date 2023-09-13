@@ -1,199 +1,426 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
 	"image"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
+	"time"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/widget"
+	g143 "github.com/bankole7782/graphics143"
 	"github.com/disintegration/imaging"
+	"github.com/fogleman/gg"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/saenuma/wallpapers381/libw381"
 )
 
+const (
+	fps = 10
+)
+
+var objCoords map[g143.RectSpecs]any
+var currentWindowFrame image.Image
+var lineNo int
+var wNumEntryActive bool
+var enteredText string
+var tmpFrame image.Image
+
+// symbols types
+type NextButton struct{}
+type PrevButton struct{}
+type WallpaperNumberEntry struct{}
+type SetupInstrsButton struct{}
+type ColorsButton struct{}
+type OurSite struct{}
+
 func main() {
-	os.Setenv("FYNE_THEME", "light")
+	runtime.LockOSThread()
+
+	objCoords = make(map[g143.RectSpecs]any)
+
+	window := g143.NewWindow(1200, 800, "Wallpapers381 Gallery", false)
+	allDraws(window)
+
+	// respond to the mouse
+	window.SetMouseButtonCallback(mouseBtnCallback)
+	window.SetKeyCallback(keyCallback)
+
+	for !window.ShouldClose() {
+		t := time.Now()
+		glfw.PollEvents()
+
+		time.Sleep(time.Second/time.Duration(fps) - time.Since(t))
+	}
+}
+
+func allDraws(window *glfw.Window) {
+	wWidth, wHeight := window.GetSize()
+
+	// frame buffer
+	ggCtx := gg.NewContext(wWidth, wHeight)
+
+	// background rectangle
+	ggCtx.DrawRectangle(0, 0, float64(wWidth), float64(wHeight))
+	ggCtx.SetHexColor("#ffffff")
+	ggCtx.Fill()
+
+	// load font
+	fontPath := getDefaultFontPath()
+	err := ggCtx.LoadFontFace(fontPath, 20)
+	if err != nil {
+		panic(err)
+	}
+
+	// previous button
+	beginXOffset := 200
+	ggCtx.SetHexColor("#D09090")
+	prevStr := "Previous"
+	prevStrW, prevStrH := ggCtx.MeasureString(prevStr)
+	ggCtx.DrawRoundedRectangle(float64(beginXOffset), 10, prevStrW+50, prevStrH+25, (prevStrH+25)/2)
+	ggCtx.Fill()
+
+	prevBtnRS := g143.RectSpecs{Width: int(prevStrW) + 50, Height: int(prevStrH) + 25, OriginX: beginXOffset, OriginY: 10}
+	objCoords[prevBtnRS] = PrevButton{}
+
+	ggCtx.SetHexColor("#444")
+	ggCtx.DrawString(prevStr, float64(beginXOffset)+25, 35)
+
+	// next button
+	ggCtx.SetHexColor("#90D092")
+	nextStr := "Next"
+	nextStrWidth, nextStrHeight := ggCtx.MeasureString(nextStr)
+	nexBtnOriginX := prevBtnRS.OriginX + prevBtnRS.Width + 30
+	ggCtx.DrawRoundedRectangle(float64(nexBtnOriginX), 10, nextStrWidth+50, nextStrHeight+25, (nextStrHeight+25)/2)
+	ggCtx.Fill()
+
+	nextBtnRS := g143.RectSpecs{Width: int(nextStrWidth) + 50, Height: int(nextStrHeight) + 25, OriginX: nexBtnOriginX,
+		OriginY: 10}
+	objCoords[nextBtnRS] = NextButton{}
+
+	ggCtx.SetHexColor("#444")
+	ggCtx.DrawString(nextStr, float64(nextBtnRS.OriginX)+25, 35)
+
+	numStr := "Wallpaper Number:"
+	numStrWidth, _ := ggCtx.MeasureString(numStr)
+	ggCtx.DrawString(numStr, float64(nextBtnRS.OriginX+nextBtnRS.Width)+30, 35)
+
+	// wallpaper number entry box
+	ggCtx.SetHexColor("#909BD0")
+	wNumEntryOriginX := nextBtnRS.OriginX + nextBtnRS.Width + 30 + int(numStrWidth) + 10
+	ggCtx.DrawRectangle(float64(wNumEntryOriginX), nextStrHeight+30, 100, 3)
+	ggCtx.Fill()
+
+	wNumEntryRS := g143.RectSpecs{Width: 100, Height: int(nextStrHeight) + 30, OriginX: wNumEntryOriginX,
+		OriginY: 10}
+	objCoords[wNumEntryRS] = WallpaperNumberEntry{}
+
+	lineNo = libw381.GetNextTextAddr(1)
+	lineNoStr := strconv.Itoa(lineNo)
+	enteredText = lineNoStr
+	ggCtx.SetHexColor("#444")
+	ggCtx.DrawString(lineNoStr, float64(wNumEntryOriginX+15), 35)
+
+	// setup instructions button
+	ggCtx.SetHexColor("#D090CB")
+	setupInstrStr := "Setup Instructions"
+	setupInstrStrWidth, setupInstrStrHeight := ggCtx.MeasureString(setupInstrStr)
+	setupInstrBtnOriginX := wNumEntryRS.OriginX + wNumEntryRS.Width + 30
+	ggCtx.DrawRoundedRectangle(float64(setupInstrBtnOriginX), 10, setupInstrStrWidth+50,
+		setupInstrStrHeight+25, (setupInstrStrHeight+25)/2)
+	ggCtx.Fill()
+
+	setupInstrBtnRS := g143.RectSpecs{Width: int(setupInstrStrWidth) + 50, Height: int(setupInstrStrHeight) + 25,
+		OriginX: setupInstrBtnOriginX, OriginY: 10}
+	objCoords[setupInstrBtnRS] = SetupInstrsButton{}
+
+	ggCtx.SetHexColor("#444")
+	ggCtx.DrawString(setupInstrStr, float64(setupInstrBtnOriginX+25), 35)
+
+	// display current wallpaper
+	wimg := libw381.MakeAWallpaper(lineNo)
+
+	w381OriginY := (setupInstrBtnRS.Height + 40)
+	w381Width := wWidth - 20
+	w381Height := wHeight - (w381OriginY)
+
+	wimg = imaging.Fit(wimg, w381Width, w381Height, imaging.Lanczos)
+	ggCtx.DrawImage(wimg, 10, w381OriginY)
+
+	// draw our site below
+	ggCtx.SetHexColor("#9C5858")
+	fromAddr := "sae.ng"
+	fromAddrWidth, fromAddrHeight := ggCtx.MeasureString(fromAddr)
+	fromAddrOriginX := (wWidth - int(fromAddrWidth)) / 2
+	ggCtx.DrawString(fromAddr, float64(fromAddrOriginX), float64(wHeight-int(fromAddrHeight)))
+	fars := g143.RectSpecs{OriginX: fromAddrOriginX, OriginY: wHeight - 40,
+		Width: int(fromAddrWidth), Height: 40}
+	objCoords[fars] = OurSite{}
+
+	// send the frame to glfw window
+	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+	g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
+	window.SwapBuffers()
+
+	// save the frame
+	currentWindowFrame = ggCtx.Image()
+}
+
+func getDefaultFontPath() string {
+	fontPath := filepath.Join(os.TempDir(), "k117_font.ttf")
+	os.WriteFile(fontPath, DefaultFont, 0777)
+	return fontPath
+}
+
+func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
+	if action != glfw.Release {
+		return
+	}
+
+	xPos, yPos := window.GetCursorPos()
+	xPosInt := int(xPos)
+	yPosInt := int(yPos)
+
+	wWidth, wHeight := window.GetSize()
+
+	// var objRS g143.RectSpecs
+	var obj any
+
+	var setupInstrBtnRS, wNumEntryRS g143.RectSpecs
+
+	for rs, anyObj := range objCoords {
+		if g143.InRectSpecs(rs, xPosInt, yPosInt) {
+			// objRS = rs
+			obj = anyObj
+		}
+
+		// store setupInstrBtnRS
+		if _, ok := anyObj.(SetupInstrsButton); ok {
+			setupInstrBtnRS = rs
+		}
+
+		// store wNumEntryRS
+		if _, ok := anyObj.(WallpaperNumberEntry); ok {
+			wNumEntryRS = rs
+		} else {
+			wNumEntryActive = false
+		}
+	}
 
 	rootPath, _ := libw381.GetGUIPath()
 
-	myApp := app.New()
-	myWindow := myApp.NewWindow("Wallpapers381 Gallery")
-
-	// update slideshow store
-	tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
-	numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
-
-	if runtime.GOOS == "windows" {
-		numberOfCPUS := runtime.NumCPU()
-		var wg sync.WaitGroup
-		jobsPerThread := int(math.Floor(float64(numberOfTexts) / float64(numberOfCPUS)))
-
-		installedVersion := ""
-		rawVersion, err := os.ReadFile(filepath.Join(rootPath, "version.txt"))
-		if err != nil {
-			installedVersion = "undefined"
-		}
-		installedVersion = strings.TrimSpace(string(rawVersion))
-
-		if W381_IMAGES_VERSION != installedVersion {
-			hd, _ := os.UserHomeDir()
-			if libw381.DoesPathExists(filepath.Join(hd, "Wallpapers381")) {
-				os.RemoveAll(filepath.Join(hd, "Wallpapers381"))
-			}
-			os.MkdirAll(filepath.Join(hd, "Wallpapers381"), 0777)
-
-			for threadIndex := 0; threadIndex < numberOfCPUS; threadIndex++ {
-				wg.Add(1)
-				startIndex := threadIndex * jobsPerThread
-				endIndex := (threadIndex + 1) * jobsPerThread
-
-				go func(startIndex, endIndex int, wg *sync.WaitGroup) {
-					defer wg.Done()
-
-					for index := startIndex; index < endIndex; index++ {
-						if index == 0 {
-							continue
-						}
-
-						img := libw381.MakeAWallpaper(index)
-						imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
-					}
-				}(startIndex, endIndex, &wg)
-			}
-			wg.Wait()
-
-			for index := (jobsPerThread * numberOfCPUS); index < numberOfTexts; index++ {
-				img := libw381.MakeAWallpaper(index)
-				imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
-			}
-
-			os.WriteFile(filepath.Join(rootPath, "version.txt"), []byte(W381_IMAGES_VERSION), 0777)
-		}
+	if obj == nil {
+		return
 	}
 
-	// gallery tab begin
-	lineNo := libw381.GetNextTextAddr(1)
-	wimg := libw381.MakeAWallpaper(lineNo)
-
-	w381Img := canvas.NewImageFromImage(wimg)
-	w381Img.FillMode = canvas.ImageFillOriginal
-
-	imageContainer := container.NewCenter(container.NewPadded(w381Img))
-
-	jumpEntry := widget.NewEntry()
-	jumpEntry.SetText(strconv.Itoa(lineNo))
-	jumpEntry.OnSubmitted = func(s string) {
-		lineNo, err := strconv.Atoi(s)
-		if err != nil {
-			return
-		}
-		if lineNo > numberOfTexts {
-			return
-		}
-
-		wimg = libw381.MakeAWallpaper(lineNo)
-		w381Img = canvas.NewImageFromImage(wimg)
-		w381Img.FillMode = canvas.ImageFillOriginal
-		imageContainer.RemoveAll()
-		imageContainer.Add(container.NewPadded(w381Img))
-		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
-	}
-
-	nextBtn := widget.NewButton("next", func() {
-		lineNo = libw381.GetNextTextAddr(1)
-		wimg = libw381.MakeAWallpaper(lineNo)
-		w381Img = canvas.NewImageFromImage(wimg)
-		w381Img.FillMode = canvas.ImageFillOriginal
-		imageContainer.RemoveAll()
-		imageContainer.Add(container.NewPadded(w381Img))
-		jumpEntry.SetText(strconv.Itoa(lineNo))
-	})
-
-	prevBtn := widget.NewButton("previous", func() {
+	switch obj.(type) {
+	case PrevButton:
+		wNumEntryActive = false
 		if lineNo != 1 {
 			lineNo = lineNo - 1
 		}
 
-		wimg = libw381.MakeAWallpaper(lineNo)
-		w381Img = canvas.NewImageFromImage(wimg)
-		w381Img.FillMode = canvas.ImageFillOriginal
-		imageContainer.RemoveAll()
-		imageContainer.Add(container.NewPadded(w381Img))
-		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
-		jumpEntry.SetText(strconv.Itoa(lineNo))
-	})
+		ggCtx := gg.NewContextForImage(currentWindowFrame)
 
-	setupInstructionsBtn := widget.NewButton("Setup Instructions", func() {
+		// update the image
+		wimg := libw381.MakeAWallpaper(lineNo)
+		w381OriginY := (setupInstrBtnRS.Height + 40)
+		w381Width := wWidth - 20
+		w381Height := wHeight - (w381OriginY)
 
-		var setupLabel *widget.RichText
+		wimg = imaging.Fit(wimg, w381Width, w381Height, imaging.Lanczos)
+		ggCtx.DrawImage(wimg, 10, w381OriginY)
 
-		if runtime.GOOS == "windows" {
-			hd, _ := os.UserHomeDir()
-			path := filepath.Join(hd, "Wallpapers381")
-			setupLabel = widget.NewRichTextFromMarkdown(fmt.Sprintf(`# Setup Instructions
-		
-1. Launch the App (needed to update the wallpapers store)
-2. Open Settings.
-3. Click **Personalisation** on the left and then click background
-4. Set the first select to **Slideshow**
-5. Click **Browse** and navigate to **%s** 
-6. Repeat this instructions after update.
-			`, path))
-
-		} else {
-			setupLabel = widget.NewRichTextFromMarkdown(`# Setup Instructions
-1.	Launch the terminal
-
-2.	Run the program **wallpapers381.switch**
-
-			`)
+		// load font
+		fontPath := getDefaultFontPath()
+		err := ggCtx.LoadFontFace(fontPath, 20)
+		if err != nil {
+			panic(err)
 		}
 
-		innerBox := container.New(&FillSpace{}, container.NewMax(setupLabel))
-		dialog.ShowCustom("Sample Lyrics File", "Close", innerBox, myWindow)
-	})
+		// update the display of line number
+		lineNoStr := strconv.Itoa(lineNo)
+		enteredText = lineNoStr
+		ggCtx.SetHexColor("#fff")
+		ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
+			float64(wNumEntryRS.Width), float64(setupInstrBtnRS.Height-15))
+		ggCtx.Fill()
 
-	saeBtn := widget.NewButton("sae.ng", func() {
+		ggCtx.SetHexColor("#444")
+		ggCtx.DrawString(lineNoStr, float64(wNumEntryRS.OriginX+15), 35)
+		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
+
+		// send the frame to glfw window
+		windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+		g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
+		window.SwapBuffers()
+
+		// save the frame
+		currentWindowFrame = ggCtx.Image()
+
+	case NextButton:
+		wNumEntryActive = false
+		lineNo = libw381.GetNextTextAddr(1)
+
+		ggCtx := gg.NewContextForImage(currentWindowFrame)
+
+		// update the image
+		wimg := libw381.MakeAWallpaper(lineNo)
+		w381OriginY := (setupInstrBtnRS.Height + 40)
+		w381Width := wWidth - 20
+		w381Height := wHeight - (w381OriginY)
+
+		wimg = imaging.Fit(wimg, w381Width, w381Height, imaging.Lanczos)
+		ggCtx.DrawImage(wimg, 10, w381OriginY)
+
+		// load font
+		fontPath := getDefaultFontPath()
+		err := ggCtx.LoadFontFace(fontPath, 20)
+		if err != nil {
+			panic(err)
+		}
+
+		// update the display of line number
+		lineNoStr := strconv.Itoa(lineNo)
+		enteredText = lineNoStr
+		ggCtx.SetHexColor("#fff")
+		ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
+			float64(wNumEntryRS.Width), float64(setupInstrBtnRS.Height-15))
+		ggCtx.Fill()
+
+		ggCtx.SetHexColor("#444")
+		ggCtx.DrawString(lineNoStr, float64(wNumEntryRS.OriginX+15), 35)
+		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
+
+		// send the frame to glfw window
+		windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+		g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
+		window.SwapBuffers()
+
+		// save the frame
+		currentWindowFrame = ggCtx.Image()
+
+	case WallpaperNumberEntry:
+		wNumEntryActive = true
+
+	case OurSite:
+		wNumEntryActive = false
+
 		if runtime.GOOS == "windows" {
 			exec.Command("cmd", "/C", "start", "https://sae.ng").Run()
 		} else if runtime.GOOS == "linux" {
 			exec.Command("xdg-open", "https://sae.ng").Run()
 		}
-	})
 
-	aboutBtn := widget.NewButton("About Us", func() {
-		img, _, err := image.Decode(bytes.NewReader(SaeLogoBytes))
-		if err != nil {
-			panic(err)
+	case SetupInstrsButton:
+		tmpFrame = currentWindowFrame
+
+		drawSetupInstr(window, currentWindowFrame)
+
+	case DialogCloseButton:
+		if tmpFrame != nil {
+			// send the frame to glfw window
+			windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+			g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
+			window.SwapBuffers()
+
+			currentWindowFrame = tmpFrame
+			tmpFrame = nil
 		}
-		logoImage := canvas.NewImageFromImage(img)
-		logoImage.FillMode = canvas.ImageFillOriginal
 
-		boxes := container.NewVBox(
-			container.NewCenter(logoImage),
-			widget.NewLabelWithStyle("Brought to You with Love by", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-			saeBtn,
-		)
-		dialog.ShowCustom("About Wallpapers381", "Close", boxes, myWindow)
-	})
+	}
+}
 
-	topBar := container.New(&halfes{}, prevBtn, nextBtn, jumpEntry, widget.NewSeparator(), setupInstructionsBtn, aboutBtn)
-	galleryContainer := container.NewVBox(topBar, imageContainer)
+func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	if action != glfw.Release {
+		return
+	}
 
-	myWindow.SetContent(galleryContainer)
+	if !wNumEntryActive {
+		return
+	}
 
-	myWindow.Resize(fyne.NewSize(1100, 600))
-	myWindow.ShowAndRun()
+	rootPath, _ := libw381.GetGUIPath()
+	wWidth, wHeight := window.GetSize()
+
+	var wNumEntryRS, setupInstrBtnRS g143.RectSpecs
+	for k, v := range objCoords {
+		if _, ok := v.(WallpaperNumberEntry); ok {
+			wNumEntryRS = k
+		}
+		if _, ok := v.(SetupInstrsButton); ok {
+			setupInstrBtnRS = k
+		}
+	}
+
+	// enforce number types
+	if isKeyNumeric(key) {
+		enteredText += glfw.GetKeyName(key, scancode)
+	} else if key == glfw.KeyBackspace && len(enteredText) != 0 {
+		enteredText = enteredText[:len(enteredText)-1]
+	}
+
+	fontPath := getDefaultFontPath()
+	ggCtx := gg.NewContextForImage(currentWindowFrame)
+	err := ggCtx.LoadFontFace(fontPath, 20)
+	if err != nil {
+		panic(err)
+	}
+
+	ggCtx.SetHexColor("#fff")
+	ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
+		float64(wNumEntryRS.Width), float64(setupInstrBtnRS.Height-15))
+	ggCtx.Fill()
+
+	ggCtx.SetHexColor("#444")
+	ggCtx.DrawString(enteredText, float64(wNumEntryRS.OriginX+15), 35)
+
+	if key == glfw.KeyEnter {
+		// check validity of entered number
+		tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
+		numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
+
+		tmp, err := strconv.Atoi(enteredText)
+		if err != nil {
+			return
+		}
+		if tmp > numberOfTexts {
+			return
+		}
+
+		lineNo = tmp
+		// update the image
+		wimg := libw381.MakeAWallpaper(lineNo)
+		w381OriginY := (setupInstrBtnRS.Height + 40)
+		w381Width := wWidth - 20
+		w381Height := wHeight - (w381OriginY)
+
+		wimg = imaging.Fit(wimg, w381Width, w381Height, imaging.Lanczos)
+		ggCtx.DrawImage(wimg, 10, w381OriginY)
+
+		os.WriteFile(filepath.Join(rootPath, "last_text.txt"), []byte(strconv.Itoa(lineNo)), 0777)
+	}
+
+	// send the frame to glfw window
+	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+	g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
+	window.SwapBuffers()
+
+	// save the frame
+	currentWindowFrame = ggCtx.Image()
+}
+
+func isKeyNumeric(key glfw.Key) bool {
+	numKeys := []glfw.Key{glfw.Key0, glfw.Key1, glfw.Key2, glfw.Key3, glfw.Key4,
+		glfw.Key5, glfw.Key6, glfw.Key7, glfw.Key8, glfw.Key9}
+
+	for _, numKey := range numKeys {
+		if key == numKey {
+			return true
+		}
+	}
+
+	return false
 }
