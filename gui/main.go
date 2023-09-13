@@ -75,7 +75,7 @@ func allDraws(window *glfw.Window) {
 	}
 
 	// previous button
-	beginXOffset := 80
+	beginXOffset := 200
 	ggCtx.SetHexColor("#D09090")
 	prevStr := "Previous"
 	prevStrW, prevStrH := ggCtx.MeasureString(prevStr)
@@ -139,26 +139,10 @@ func allDraws(window *glfw.Window) {
 	ggCtx.SetHexColor("#444")
 	ggCtx.DrawString(setupInstrStr, float64(setupInstrBtnOriginX+25), 35)
 
-	// colors button
-	ggCtx.SetHexColor("#D0BB90")
-	colorsStr := "Setup Colors"
-	colorsStrWidth, colorsStrHeight := ggCtx.MeasureString(colorsStr)
-	colorsBtnOriginX := setupInstrBtnOriginX + setupInstrBtnRS.Width + 30
-	ggCtx.DrawRoundedRectangle(float64(colorsBtnOriginX), 10, colorsStrWidth+50, colorsStrHeight+25,
-		(colorsStrHeight+25)/2)
-	ggCtx.Fill()
-
-	colorsBtnRS := g143.RectSpecs{Width: int(colorsStrWidth) + 50, Height: int(colorsStrHeight) + 25,
-		OriginX: colorsBtnOriginX, OriginY: 10}
-	objCoords[colorsBtnRS] = ColorsButton{}
-
-	ggCtx.SetHexColor("#444")
-	ggCtx.DrawString(colorsStr, float64(colorsBtnOriginX+25), 35)
-
 	// display current wallpaper
 	wimg := libw381.MakeAWallpaper(lineNo)
 
-	w381OriginY := (colorsBtnRS.Height + 40)
+	w381OriginY := (setupInstrBtnRS.Height + 40)
 	w381Width := wWidth - 20
 	w381Height := wHeight - (w381OriginY)
 
@@ -204,7 +188,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 	// var objRS g143.RectSpecs
 	var obj any
 
-	var colorsBtnRS, wNumEntryRS g143.RectSpecs
+	var setupInstrBtnRS, wNumEntryRS g143.RectSpecs
 
 	for rs, anyObj := range objCoords {
 		if g143.InRectSpecs(rs, xPosInt, yPosInt) {
@@ -212,9 +196,9 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 			obj = anyObj
 		}
 
-		// store colorsBtnRS
-		if _, ok := anyObj.(ColorsButton); ok {
-			colorsBtnRS = rs
+		// store setupInstrBtnRS
+		if _, ok := anyObj.(SetupInstrsButton); ok {
+			setupInstrBtnRS = rs
 		}
 
 		// store wNumEntryRS
@@ -242,7 +226,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 		// update the image
 		wimg := libw381.MakeAWallpaper(lineNo)
-		w381OriginY := (colorsBtnRS.Height + 40)
+		w381OriginY := (setupInstrBtnRS.Height + 40)
 		w381Width := wWidth - 20
 		w381Height := wHeight - (w381OriginY)
 
@@ -261,7 +245,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		enteredText = lineNoStr
 		ggCtx.SetHexColor("#fff")
 		ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
-			float64(wNumEntryRS.Width), float64(colorsBtnRS.Height-15))
+			float64(wNumEntryRS.Width), float64(setupInstrBtnRS.Height-15))
 		ggCtx.Fill()
 
 		ggCtx.SetHexColor("#444")
@@ -284,7 +268,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 		// update the image
 		wimg := libw381.MakeAWallpaper(lineNo)
-		w381OriginY := (colorsBtnRS.Height + 40)
+		w381OriginY := (setupInstrBtnRS.Height + 40)
 		w381Width := wWidth - 20
 		w381Height := wHeight - (w381OriginY)
 
@@ -303,7 +287,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		enteredText = lineNoStr
 		ggCtx.SetHexColor("#fff")
 		ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
-			float64(wNumEntryRS.Width), float64(colorsBtnRS.Height-15))
+			float64(wNumEntryRS.Width), float64(setupInstrBtnRS.Height-15))
 		ggCtx.Fill()
 
 		ggCtx.SetHexColor("#444")
@@ -336,13 +320,16 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		drawSetupInstr(window, currentWindowFrame)
 
 	case DialogCloseButton:
-		// send the frame to glfw window
-		windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
-		g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
-		window.SwapBuffers()
+		if tmpFrame != nil {
+			// send the frame to glfw window
+			windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+			g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
+			window.SwapBuffers()
 
-		currentWindowFrame = tmpFrame
-		tmpFrame = nil
+			currentWindowFrame = tmpFrame
+			tmpFrame = nil
+		}
+
 	}
 }
 
@@ -358,13 +345,13 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 	rootPath, _ := libw381.GetGUIPath()
 	wWidth, wHeight := window.GetSize()
 
-	var wNumEntryRS, colorsBtnRS g143.RectSpecs
+	var wNumEntryRS, setupInstrBtnRS g143.RectSpecs
 	for k, v := range objCoords {
 		if _, ok := v.(WallpaperNumberEntry); ok {
 			wNumEntryRS = k
 		}
-		if _, ok := v.(ColorsButton); ok {
-			colorsBtnRS = k
+		if _, ok := v.(SetupInstrsButton); ok {
+			setupInstrBtnRS = k
 		}
 	}
 
@@ -384,7 +371,7 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 
 	ggCtx.SetHexColor("#fff")
 	ggCtx.DrawRectangle(float64(wNumEntryRS.OriginX), 10,
-		float64(wNumEntryRS.Width), float64(colorsBtnRS.Height-15))
+		float64(wNumEntryRS.Width), float64(setupInstrBtnRS.Height-15))
 	ggCtx.Fill()
 
 	ggCtx.SetHexColor("#444")
@@ -406,7 +393,7 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 		lineNo = tmp
 		// update the image
 		wimg := libw381.MakeAWallpaper(lineNo)
-		w381OriginY := (colorsBtnRS.Height + 40)
+		w381OriginY := (setupInstrBtnRS.Height + 40)
 		w381Width := wWidth - 20
 		w381Height := wHeight - (w381OriginY)
 
