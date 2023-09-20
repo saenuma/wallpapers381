@@ -29,7 +29,7 @@ func drawSetupInstr(window *glfw.Window, currentFrame image.Image) {
 4. Set the first select to Slideshow
 5. Click Browse and navigate to %s 
 6. Repeat this instructions after update.
-		`, path)
+`, path)
 
 	} else {
 		setupInstrStr = `

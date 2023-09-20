@@ -1,13 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"image"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	g143 "github.com/bankole7782/graphics143"
@@ -37,6 +40,59 @@ type ColorsButton struct{}
 type OurSite struct{}
 
 func main() {
+	rootPath, _ := libw381.GetGUIPath()
+	// update slideshow store for windows
+	tmpAllTexts := strings.TrimSpace(string(libw381.EmbeddedTexts))
+	numberOfTexts := len(strings.Split(tmpAllTexts, "\n"))
+
+	if runtime.GOOS == "windows" {
+		numberOfCPUS := runtime.NumCPU()
+		var wg sync.WaitGroup
+		jobsPerThread := int(math.Floor(float64(numberOfTexts) / float64(numberOfCPUS)))
+
+		installedVersion := ""
+		rawVersion, err := os.ReadFile(filepath.Join(rootPath, "version.txt"))
+		if err != nil {
+			installedVersion = "undefined"
+		}
+		installedVersion = strings.TrimSpace(string(rawVersion))
+
+		if W381_IMAGES_VERSION != installedVersion {
+			hd, _ := os.UserHomeDir()
+			if libw381.DoesPathExists(filepath.Join(hd, "Wallpapers381")) {
+				os.RemoveAll(filepath.Join(hd, "Wallpapers381"))
+			}
+			os.MkdirAll(filepath.Join(hd, "Wallpapers381"), 0777)
+
+			for threadIndex := 0; threadIndex < numberOfCPUS; threadIndex++ {
+				wg.Add(1)
+				startIndex := threadIndex * jobsPerThread
+				endIndex := (threadIndex + 1) * jobsPerThread
+
+				go func(startIndex, endIndex int, wg *sync.WaitGroup) {
+					defer wg.Done()
+
+					for index := startIndex; index < endIndex; index++ {
+						if index == 0 {
+							continue
+						}
+
+						img := libw381.MakeAWallpaper(index)
+						imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
+					}
+				}(startIndex, endIndex, &wg)
+			}
+			wg.Wait()
+
+			for index := (jobsPerThread * numberOfCPUS); index < numberOfTexts; index++ {
+				img := libw381.MakeAWallpaper(index)
+				imaging.Save(img, filepath.Join(hd, "Wallpapers381", fmt.Sprintf("%d.png", index)))
+			}
+
+			os.WriteFile(filepath.Join(rootPath, "version.txt"), []byte(W381_IMAGES_VERSION), 0777)
+		}
+	}
+
 	runtime.LockOSThread()
 
 	objCoords = make(map[g143.RectSpecs]any)
