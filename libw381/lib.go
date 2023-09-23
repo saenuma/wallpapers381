@@ -57,10 +57,11 @@ func MakeAWallpaper(lineNo int) image.Image {
 	c.SetSrc(fg)
 	c.SetHinting(font.HintingNone)
 
-	// Draw the text.
+	// Draw the line number.
 	pt := freetype.Pt(wWidth-200, wHeight-100)
-	_, err = c.DrawString(strconv.Itoa(lineNo), pt)
+	c.DrawString(strconv.Itoa(lineNo), pt)
 
+	// draw the message
 	sizeW, sizeH := 60, 90
 	currentX, currentY := 70, 50
 	for _, cha := range texts {
