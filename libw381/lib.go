@@ -1,20 +1,21 @@
 package libw381
 
 import (
-	"fmt"
+	"bytes"
 	"image"
+	"image/color"
 	"image/draw"
+	_ "image/png"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/disintegration/imaging"
 	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/pkg/errors"
 	"golang.org/x/image/font"
-	"golang.org/x/image/math/fixed"
 )
 
 const (
@@ -24,63 +25,28 @@ const (
 	MSIZE   = 45.0
 )
 
-func WordWrap(text string, writeWidth int, fontDrawer *font.Drawer) []string {
-	widthFixed := fixed.I(writeWidth)
-
-	strs := strings.Fields(text)
-	outStrs := make([]string, 0)
-	var tmpStr string
-	for i, oneStr := range strs {
-		var aStr string
-		if i == 0 {
-			aStr = oneStr
-		} else {
-			aStr += " " + oneStr
-		}
-
-		tmpStr += aStr
-		if fontDrawer.MeasureString(tmpStr) >= widthFixed {
-			outStr := tmpStr[:len(tmpStr)-len(aStr)]
-			tmpStr = oneStr
-			outStrs = append(outStrs, outStr)
-		}
-	}
-	outStrs = append(outStrs, tmpStr)
-
-	return outStrs
-}
-
 func GetOutputTxt(lineNo int) string {
 	tmpAllTexts := strings.TrimSpace(string(EmbeddedTexts))
 	allTextsSlice := strings.Split(tmpAllTexts, "\n")
-	return fmt.Sprintf("%d. %s", lineNo, allTextsSlice[lineNo-1])
+	return allTextsSlice[lineNo-1]
 }
 
 func MakeAWallpaper(lineNo int) image.Image {
-	rgba := image.NewRGBA(image.Rect(0, 0, 1366, 768))
+	wWidth, wHeight := 1366, 768
+	rgba := image.NewRGBA(image.Rect(0, 0, wWidth, wHeight))
 
 	fontParsed, err := freetype.ParseFont(FontBytes)
 	if err != nil {
 		panic(err)
 	}
 
-	fontDrawer := &font.Drawer{
-		Dst: rgba,
-		Src: image.Black,
-		Face: truetype.NewFace(fontParsed, &truetype.Options{
-			Size:    SIZE,
-			DPI:     DPI,
-			Hinting: font.HintingNone,
-		}),
-	}
-
-	texts := WordWrap(GetOutputTxt(lineNo), 1366-130, fontDrawer)
+	texts := GetOutputTxt(lineNo)
 
 	newColor, _ := colorful.Hex("#3C2205")
-	newColor2, _ := colorful.Hex("#F2A550")
+	// newColor2, _ := colorful.Hex("#F2A550")
 
 	fg := image.NewUniform(newColor)
-	bg := image.NewUniform(newColor2)
+	bg := image.NewUniform(color.White)
 
 	draw.Draw(rgba, rgba.Bounds(), bg, image.Point{}, draw.Src)
 	c := freetype.NewContext()
@@ -93,13 +59,59 @@ func MakeAWallpaper(lineNo int) image.Image {
 	c.SetHinting(font.HintingNone)
 
 	// Draw the text.
-	pt := freetype.Pt(80, 50+int(c.PointToFixed(SIZE)>>6))
-	for _, s := range texts {
-		_, err = c.DrawString(s, pt)
-		if err != nil {
-			panic(err)
+	pt := freetype.Pt(wWidth-200, wHeight-100)
+	_, err = c.DrawString(strconv.Itoa(lineNo), pt)
+
+	sizeW, sizeH := 60, 90
+	currentX, currentY := 70, 50
+	for _, cha := range texts {
+		chaStr := strings.ToLower(string(cha))
+
+		if chaStr != " " {
+			if chaStr == "." {
+				chaStr = "dot"
+			} else if chaStr == "," {
+				chaStr = "comma"
+			} else if chaStr == "'" {
+				chaStr = "apos"
+			}
+
+			rawCha, _ := Letters.ReadFile("letters/" + chaStr + ".png")
+
+			chaImg, _, err := image.Decode(bytes.NewReader(rawCha))
+			if err != nil {
+				panic(err)
+			}
+
+			if chaStr == "dot" || chaStr == "comma" || chaStr == "apos" || chaStr == " " {
+				chaImg = imaging.Fit(chaImg, sizeW/2, sizeH, imaging.Lanczos)
+			} else {
+				chaImg = imaging.Fit(chaImg, sizeW, sizeH, imaging.Lanczos)
+			}
+
+			draw.Draw(rgba, image.Rect(currentX, currentY, currentX+sizeW, currentY+sizeH), chaImg,
+				image.Point{}, draw.Over)
 		}
-		pt.Y += c.PointToFixed(SIZE * SPACING)
+
+		if chaStr == "dot" || chaStr == "comma" || chaStr == "apos" || chaStr == " " {
+			newX := currentX + 50
+			if newX > (wWidth - 50) {
+				currentY += sizeH
+				currentX = 70
+			} else {
+				currentX += 50
+			}
+
+		} else {
+			newX := currentX + sizeW
+			if newX > (wWidth - sizeW - 20) {
+				currentY += sizeH + 10
+				currentX = 70
+			} else {
+				currentX += sizeW
+			}
+
+		}
 	}
 
 	return rgba
