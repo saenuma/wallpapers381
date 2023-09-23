@@ -43,7 +43,6 @@ func MakeAWallpaper(lineNo int) image.Image {
 	texts := GetOutputTxt(lineNo)
 
 	newColor, _ := colorful.Hex("#3C2205")
-	// newColor2, _ := colorful.Hex("#F2A550")
 
 	fg := image.NewUniform(newColor)
 	bg := image.NewUniform(color.White)
