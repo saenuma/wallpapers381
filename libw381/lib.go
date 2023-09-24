@@ -58,7 +58,7 @@ func MakeAWallpaper(lineNo int) image.Image {
 	c.SetHinting(font.HintingNone)
 
 	// Draw the line number.
-	pt := freetype.Pt(wWidth-200, wHeight-100)
+	pt := freetype.Pt(wWidth-200, wHeight-50)
 	c.DrawString(strconv.Itoa(lineNo), pt)
 
 	// draw the message
@@ -66,6 +66,10 @@ func MakeAWallpaper(lineNo int) image.Image {
 	currentX, currentY := 70, 50
 	for _, cha := range texts {
 		chaStr := strings.ToLower(string(cha))
+
+		if chaStr == " " && currentX == 70 {
+			continue
+		}
 
 		if chaStr != " " {
 			if chaStr == "." {
@@ -93,10 +97,11 @@ func MakeAWallpaper(lineNo int) image.Image {
 				image.Point{}, draw.Over)
 		}
 
-		if chaStr == "dot" || chaStr == "comma" || chaStr == "apos" || chaStr == " " {
+		if chaStr == "dot" || chaStr == "comma" || chaStr == "apos" {
+			// if chaStr == "dot" || chaStr == "comma" || chaStr == "apos" || chaStr == " " {
 			newX := currentX + 50
 			if newX > (wWidth - 50) {
-				currentY += sizeH
+				currentY += sizeH + 10
 				currentX = 70
 			} else {
 				currentX += 50
@@ -104,7 +109,7 @@ func MakeAWallpaper(lineNo int) image.Image {
 
 		} else {
 			newX := currentX + sizeW
-			if newX > (wWidth - sizeW - 20) {
+			if newX > (wWidth - sizeW - 70) {
 				currentY += sizeH + 10
 				currentX = 70
 			} else {
