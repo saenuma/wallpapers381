@@ -27,6 +27,7 @@ const (
 
 func GetOutputTxt(lineNo int) string {
 	tmpAllTexts := strings.TrimSpace(string(EmbeddedTexts))
+	tmpAllTexts = strings.ReplaceAll(tmpAllTexts, "\r", "")
 	allTextsSlice := strings.Split(tmpAllTexts, "\n")
 	return allTextsSlice[lineNo-1]
 }
@@ -80,7 +81,10 @@ func MakeAWallpaper(lineNo int) image.Image {
 				chaStr = "apos"
 			}
 
-			rawCha, _ := Letters.ReadFile("letters/" + chaStr + ".png")
+			rawCha, err := Letters.ReadFile("letters/" + chaStr + ".png")
+			if err != nil {
+				panic(err)
+			}
 
 			chaImg, _, err := image.Decode(bytes.NewReader(rawCha))
 			if err != nil {
