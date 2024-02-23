@@ -14,7 +14,9 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-type DialogCloseButton struct{}
+const (
+	DialogCloseButton = 201
+)
 
 func drawSetupInstr(window *glfw.Window, currentFrame image.Image) {
 
@@ -94,7 +96,7 @@ func drawSetupInstr(window *glfw.Window, currentFrame image.Image) {
 
 	closeBtnRS := g143.RectSpecs{Width: int(closeStrWidth) + 50, Height: int(closeStrHeight) + 25,
 		OriginX: closeBtnOriginX, OriginY: dialogOriginY + dialogHeight - 50}
-	objCoords[closeBtnRS] = DialogCloseButton{}
+	objCoords[DialogCloseButton] = closeBtnRS
 
 	ggCtx.SetHexColor("#444")
 	ggCtx.DrawString(closeStr, float64(closeBtnOriginX+25), float64(dialogOriginY+dialogHeight-25))

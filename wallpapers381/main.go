@@ -21,23 +21,22 @@ import (
 )
 
 const (
-	fps = 10
+	fps                  = 10
+	NextButton           = 101
+	PrevButton           = 102
+	WallpaperNumberEntry = 103
+	SetupInstrsButton    = 104
+	ColorsButton         = 105
+	OurSite              = 106
 )
 
-var objCoords map[g143.RectSpecs]any
+// var objCoords map[g143.RectSpecs]any
+var objCoords map[int]g143.RectSpecs
 var currentWindowFrame image.Image
 var lineNo int
 var wNumEntryActive bool
 var enteredText string
 var tmpFrame image.Image
-
-// symbols types
-type NextButton struct{}
-type PrevButton struct{}
-type WallpaperNumberEntry struct{}
-type SetupInstrsButton struct{}
-type ColorsButton struct{}
-type OurSite struct{}
 
 func main() {
 	rootPath, _ := libw381.GetGUIPath()
@@ -95,7 +94,7 @@ func main() {
 
 	runtime.LockOSThread()
 
-	objCoords = make(map[g143.RectSpecs]any)
+	objCoords = make(map[int]g143.RectSpecs)
 
 	window := g143.NewWindow(1200, 800, "Wallpapers381 Gallery", false)
 	allDraws(window)
@@ -139,7 +138,7 @@ func allDraws(window *glfw.Window) {
 	ggCtx.Fill()
 
 	prevBtnRS := g143.RectSpecs{Width: int(prevStrW) + 50, Height: int(prevStrH) + 25, OriginX: beginXOffset, OriginY: 10}
-	objCoords[prevBtnRS] = PrevButton{}
+	objCoords[PrevButton] = prevBtnRS
 
 	ggCtx.SetHexColor("#444")
 	ggCtx.DrawString(prevStr, float64(beginXOffset)+25, 35)
@@ -154,7 +153,7 @@ func allDraws(window *glfw.Window) {
 
 	nextBtnRS := g143.RectSpecs{Width: int(nextStrWidth) + 50, Height: int(nextStrHeight) + 25, OriginX: nexBtnOriginX,
 		OriginY: 10}
-	objCoords[nextBtnRS] = NextButton{}
+	objCoords[NextButton] = nextBtnRS
 
 	ggCtx.SetHexColor("#444")
 	ggCtx.DrawString(nextStr, float64(nextBtnRS.OriginX)+25, 35)
@@ -171,7 +170,7 @@ func allDraws(window *glfw.Window) {
 
 	wNumEntryRS := g143.RectSpecs{Width: 100, Height: int(nextStrHeight) + 30, OriginX: wNumEntryOriginX,
 		OriginY: 10}
-	objCoords[wNumEntryRS] = WallpaperNumberEntry{}
+	objCoords[WallpaperNumberEntry] = wNumEntryRS
 
 	lineNo = libw381.GetNextTextAddr(1)
 	lineNoStr := strconv.Itoa(lineNo)
@@ -190,7 +189,7 @@ func allDraws(window *glfw.Window) {
 
 	setupInstrBtnRS := g143.RectSpecs{Width: int(setupInstrStrWidth) + 50, Height: int(setupInstrStrHeight) + 25,
 		OriginX: setupInstrBtnOriginX, OriginY: 10}
-	objCoords[setupInstrBtnRS] = SetupInstrsButton{}
+	objCoords[SetupInstrsButton] = setupInstrBtnRS
 
 	ggCtx.SetHexColor("#444")
 	ggCtx.DrawString(setupInstrStr, float64(setupInstrBtnOriginX+25), 35)
@@ -213,7 +212,7 @@ func allDraws(window *glfw.Window) {
 	ggCtx.DrawString(fromAddr, float64(fromAddrOriginX), float64(wHeight-int(fromAddrHeight)))
 	fars := g143.RectSpecs{OriginX: fromAddrOriginX, OriginY: wHeight - 40,
 		Width: int(fromAddrWidth), Height: 40}
-	objCoords[fars] = OurSite{}
+	objCoords[OurSite] = fars
 
 	// send the frame to glfw window
 	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
@@ -241,37 +240,28 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 	wWidth, wHeight := window.GetSize()
 
-	// var objRS g143.RectSpecs
-	var obj any
+	setupInstrBtnRS := objCoords[SetupInstrsButton]
+	wNumEntryRS := objCoords[WallpaperNumberEntry]
 
-	var setupInstrBtnRS, wNumEntryRS g143.RectSpecs
+	// var widgetRS g143.RectSpecs
+	var widgetCode int
 
-	for rs, anyObj := range objCoords {
-		if g143.InRectSpecs(rs, xPosInt, yPosInt) {
-			// objRS = rs
-			obj = anyObj
-		}
-
-		// store setupInstrBtnRS
-		if _, ok := anyObj.(SetupInstrsButton); ok {
-			setupInstrBtnRS = rs
-		}
-
-		// store wNumEntryRS
-		if _, ok := anyObj.(WallpaperNumberEntry); ok {
-			wNumEntryRS = rs
-		} else {
-			wNumEntryActive = false
+	for code, RS := range objCoords {
+		if g143.InRectSpecs(RS, xPosInt, yPosInt) {
+			// widgetRS = RS
+			widgetCode = code
+			break
 		}
 	}
 
-	rootPath, _ := libw381.GetGUIPath()
-
-	if obj == nil {
+	if widgetCode == 0 {
 		return
 	}
+	rootPath, _ := libw381.GetGUIPath()
 
-	switch obj.(type) {
+	fmt.Println(widgetCode)
+
+	switch widgetCode {
 	case PrevButton:
 		wNumEntryActive = false
 		if lineNo != 1 {
@@ -401,15 +391,8 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 	rootPath, _ := libw381.GetGUIPath()
 	wWidth, wHeight := window.GetSize()
 
-	var wNumEntryRS, setupInstrBtnRS g143.RectSpecs
-	for k, v := range objCoords {
-		if _, ok := v.(WallpaperNumberEntry); ok {
-			wNumEntryRS = k
-		}
-		if _, ok := v.(SetupInstrsButton); ok {
-			setupInstrBtnRS = k
-		}
-	}
+	setupInstrBtnRS := objCoords[SetupInstrsButton]
+	wNumEntryRS := objCoords[WallpaperNumberEntry]
 
 	// enforce number types
 	if isKeyNumeric(key) {
