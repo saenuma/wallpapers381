@@ -7,4 +7,4 @@ import (
 //go:embed Roboto-Light.ttf
 var DefaultFont []byte
 
-var W381_IMAGES_VERSION = "6"
+var W381_IMAGES_VERSION = "9"

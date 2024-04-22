@@ -259,8 +259,6 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 	}
 	rootPath, _ := libw381.GetGUIPath()
 
-	fmt.Println(widgetCode)
-
 	switch widgetCode {
 	case PrevButton:
 		wNumEntryActive = false
