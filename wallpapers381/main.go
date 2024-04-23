@@ -34,7 +34,6 @@ const (
 var objCoords map[int]g143.RectSpecs
 var currentWindowFrame image.Image
 var lineNo int
-var wNumEntryActive bool
 var enteredText string
 var tmpFrame image.Image
 
@@ -261,7 +260,6 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 	switch widgetCode {
 	case PrevButton:
-		wNumEntryActive = false
 		if lineNo != 1 {
 			lineNo = lineNo - 1
 		}
@@ -305,7 +303,6 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		currentWindowFrame = ggCtx.Image()
 
 	case NextButton:
-		wNumEntryActive = false
 		lineNo = libw381.GetNextTextAddr(1)
 
 		ggCtx := gg.NewContextForImage(currentWindowFrame)
@@ -346,11 +343,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 		// save the frame
 		currentWindowFrame = ggCtx.Image()
 
-	case WallpaperNumberEntry:
-		wNumEntryActive = true
-
 	case OurSite:
-		wNumEntryActive = false
 
 		if runtime.GOOS == "windows" {
 			exec.Command("cmd", "/C", "start", "https://sae.ng").Run()
@@ -379,10 +372,6 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	if action != glfw.Release {
-		return
-	}
-
-	if !wNumEntryActive {
 		return
 	}
 
