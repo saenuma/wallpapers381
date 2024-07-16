@@ -90,8 +90,8 @@ func drawSetupInstr(window *glfw.Window, currentFrame image.Image) {
 	closeStrWidth, closeStrHeight := ggCtx.MeasureString(closeStr)
 	ggCtx.SetHexColor("#909BD0")
 	closeBtnOriginX := (wWidth - int(closeStrWidth+50)) / 2
-	ggCtx.DrawRoundedRectangle(float64(closeBtnOriginX), float64(dialogOriginY+dialogHeight-50), closeStrWidth+50,
-		closeStrHeight+25, (closeStrHeight+25)/2)
+	ggCtx.DrawRectangle(float64(closeBtnOriginX), float64(dialogOriginY+dialogHeight-50), closeStrWidth+50,
+		closeStrHeight+25)
 	ggCtx.Fill()
 
 	closeBtnRS := g143.RectSpecs{Width: int(closeStrWidth) + 50, Height: int(closeStrHeight) + 25,
