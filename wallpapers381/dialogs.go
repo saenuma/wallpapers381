@@ -94,7 +94,7 @@ func drawSetupInstr(window *glfw.Window, currentFrame image.Image) {
 		closeStrHeight+25)
 	ggCtx.Fill()
 
-	closeBtnRS := g143.RectSpecs{Width: int(closeStrWidth) + 50, Height: int(closeStrHeight) + 25,
+	closeBtnRS := g143.Rect{Width: int(closeStrWidth) + 50, Height: int(closeStrHeight) + 25,
 		OriginX: closeBtnOriginX, OriginY: dialogOriginY + dialogHeight - 50}
 	objCoords[DialogCloseButton] = closeBtnRS
 
@@ -102,7 +102,7 @@ func drawSetupInstr(window *glfw.Window, currentFrame image.Image) {
 	ggCtx.DrawString(closeStr, float64(closeBtnOriginX+25), float64(dialogOriginY+dialogHeight-25))
 
 	// send the frame to glfw window
-	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+	windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 	g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
 	window.SwapBuffers()
 

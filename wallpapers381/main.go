@@ -30,7 +30,7 @@ const (
 	OurSite              = 106
 )
 
-var objCoords map[int]g143.RectSpecs
+var objCoords map[int]g143.Rect
 var currentWindowFrame image.Image
 var lineNo int
 var enteredText string
@@ -93,7 +93,7 @@ func main() {
 
 	runtime.LockOSThread()
 
-	objCoords = make(map[int]g143.RectSpecs)
+	objCoords = make(map[int]g143.Rect)
 
 	window := g143.NewWindow(1200, 800, "Wallpapers381 Gallery", false)
 
@@ -140,7 +140,7 @@ func allDraws(window *glfw.Window, lineNo int) {
 	ggCtx.DrawRectangle(float64(beginXOffset), 10, prevStrW+50, prevStrH+25)
 	ggCtx.Fill()
 
-	prevBtnRS := g143.RectSpecs{Width: int(prevStrW) + 50, Height: int(prevStrH) + 25, OriginX: beginXOffset, OriginY: 10}
+	prevBtnRS := g143.Rect{Width: int(prevStrW) + 50, Height: int(prevStrH) + 25, OriginX: beginXOffset, OriginY: 10}
 	objCoords[PrevButton] = prevBtnRS
 
 	ggCtx.SetHexColor("#444")
@@ -154,7 +154,7 @@ func allDraws(window *glfw.Window, lineNo int) {
 	ggCtx.DrawRectangle(float64(nexBtnOriginX), 10, nextStrWidth+50, nextStrHeight+25)
 	ggCtx.Fill()
 
-	nextBtnRS := g143.RectSpecs{Width: int(nextStrWidth) + 50, Height: int(nextStrHeight) + 25, OriginX: nexBtnOriginX,
+	nextBtnRS := g143.Rect{Width: int(nextStrWidth) + 50, Height: int(nextStrHeight) + 25, OriginX: nexBtnOriginX,
 		OriginY: 10}
 	objCoords[NextButton] = nextBtnRS
 
@@ -171,7 +171,7 @@ func allDraws(window *glfw.Window, lineNo int) {
 	ggCtx.DrawRectangle(float64(wNumEntryOriginX), nextStrHeight+30, 100, 3)
 	ggCtx.Fill()
 
-	wNumEntryRS := g143.RectSpecs{Width: 100, Height: int(nextStrHeight) + 30, OriginX: wNumEntryOriginX,
+	wNumEntryRS := g143.Rect{Width: 100, Height: int(nextStrHeight) + 30, OriginX: wNumEntryOriginX,
 		OriginY: 10}
 	objCoords[WallpaperNumberEntry] = wNumEntryRS
 
@@ -189,7 +189,7 @@ func allDraws(window *glfw.Window, lineNo int) {
 		setupInstrStrHeight+25)
 	ggCtx.Fill()
 
-	setupInstrBtnRS := g143.RectSpecs{Width: int(setupInstrStrWidth) + 50, Height: int(setupInstrStrHeight) + 25,
+	setupInstrBtnRS := g143.Rect{Width: int(setupInstrStrWidth) + 50, Height: int(setupInstrStrHeight) + 25,
 		OriginX: setupInstrBtnOriginX, OriginY: 10}
 	objCoords[SetupInstrsButton] = setupInstrBtnRS
 
@@ -212,12 +212,12 @@ func allDraws(window *glfw.Window, lineNo int) {
 	fromAddrWidth, fromAddrHeight := ggCtx.MeasureString(fromAddr)
 	fromAddrOriginX := (wWidth - int(fromAddrWidth)) / 2
 	ggCtx.DrawString(fromAddr, float64(fromAddrOriginX), float64(wHeight-int(fromAddrHeight)))
-	fars := g143.RectSpecs{OriginX: fromAddrOriginX, OriginY: wHeight - 40,
+	fars := g143.Rect{OriginX: fromAddrOriginX, OriginY: wHeight - 40,
 		Width: int(fromAddrWidth), Height: 40}
 	objCoords[OurSite] = fars
 
 	// send the frame to glfw window
-	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+	windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 	g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
 	window.SwapBuffers()
 
@@ -242,11 +242,11 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 	wWidth, wHeight := window.GetSize()
 
-	// var widgetRS g143.RectSpecs
+	// var widgetRS g143.Rect
 	var widgetCode int
 
 	for code, RS := range objCoords {
-		if g143.InRectSpecs(RS, xPosInt, yPosInt) {
+		if g143.InRect(RS, xPosInt, yPosInt) {
 			// widgetRS = RS
 			widgetCode = code
 			break
@@ -286,7 +286,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 	case DialogCloseButton:
 		if tmpFrame != nil {
 			// send the frame to glfw window
-			windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+			windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 			g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
 			window.SwapBuffers()
 
@@ -357,7 +357,7 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 	}
 
 	// send the frame to glfw window
-	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+	windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 	g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
 	window.SwapBuffers()
 
@@ -391,13 +391,13 @@ func cursorPosCB(window *glfw.Window, xpos, ypos float64) {
 
 	wWidth, wHeight := window.GetSize()
 
-	var widgetRS g143.RectSpecs
+	var widgetRS g143.Rect
 	var widgetCode int
 
 	xPosInt := int(xpos)
 	yPosInt := int(ypos)
 	for code, RS := range objCoords {
-		if g143.InRectSpecs(RS, xPosInt, yPosInt) {
+		if g143.InRect(RS, xPosInt, yPosInt) {
 			widgetRS = RS
 			widgetCode = code
 			break
@@ -406,7 +406,7 @@ func cursorPosCB(window *glfw.Window, xpos, ypos float64) {
 
 	if widgetCode == 0 {
 		// send the last drawn frame to glfw window
-		windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+		windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 		g143.DrawImage(wWidth, wHeight, currentWindowFrame, windowRS)
 		window.SwapBuffers()
 		return
@@ -423,7 +423,7 @@ func cursorPosCB(window *glfw.Window, xpos, ypos float64) {
 	ggCtx.DrawImage(invertedPiece, widgetRS.OriginX, widgetRS.OriginY)
 
 	// send the frame to glfw window
-	windowRS := g143.RectSpecs{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+	windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 	g143.DrawImage(wWidth, wHeight, ggCtx.Image(), windowRS)
 	window.SwapBuffers()
 }
