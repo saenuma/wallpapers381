@@ -35,6 +35,20 @@ func New2dCtx(wWidth, wHeight int) Ctx {
 	return ctx
 }
 
+func Continue2dCtx(img image.Image) Ctx {
+	ggCtx := gg.NewContextForImage(img)
+
+	// load font
+	fontPath := getDefaultFontPath()
+	err := ggCtx.LoadFontFace(fontPath, 20)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := Ctx{WindowWidth: img.Bounds().Dx(), WindowHeight: img.Bounds().Dy(), ggCtx: ggCtx}
+	return ctx
+}
+
 func (ctx *Ctx) drawButtonA(btnId, originX, originY int, text, textColor, bgColor string) g143.Rect {
 	// draw bounding rect
 	textW, textH := ctx.ggCtx.MeasureString(text)
