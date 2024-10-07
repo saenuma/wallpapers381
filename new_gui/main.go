@@ -100,7 +100,7 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 	xPosInt := int(xPos)
 	yPosInt := int(yPos)
 
-	// wWidth, wHeight := window.GetSize()
+	wWidth, wHeight := window.GetSize()
 
 	// var widgetRS g143.Rect
 	var widgetCode int
@@ -138,21 +138,21 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 			exec.Command("xdg-open", "https://sae.ng").Run()
 		}
 
-		// case SetupInstrsButton:
-		// 	tmpFrame = currentWindowFrame
+	case SetupInstrsButton:
+		tmpFrame = currentWindowFrame
 
-		// 	drawSetupInstr(window, currentWindowFrame)
+		drawSetupInstr(window, currentWindowFrame)
 
-		// case DialogCloseButton:
-		// 	if tmpFrame != nil {
-		// 		// send the frame to glfw window
-		// 		windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
-		// 		g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
-		// 		window.SwapBuffers()
+	case DialogCloseButton:
+		if tmpFrame != nil {
+			// send the frame to glfw window
+			windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
+			g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
+			window.SwapBuffers()
 
-		// 		currentWindowFrame = tmpFrame
-		// 		tmpFrame = nil
-		// 	}
+			currentWindowFrame = tmpFrame
+			tmpFrame = nil
+		}
 
 	}
 }

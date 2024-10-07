@@ -15,6 +15,8 @@ const (
 	SetupInstrsButton    = 104
 	ColorsButton         = 105
 	OurSite              = 106
+
+	DialogCloseButton = 201
 )
 
 var (
