@@ -26,4 +26,5 @@ var (
 	enteredText        string
 	tmpFrame           image.Image
 	cursorEventsCount  = 0
+	dialogOpened       bool
 )

@@ -140,11 +140,12 @@ func mouseBtnCallback(window *glfw.Window, button glfw.MouseButton, action glfw.
 
 	case SetupInstrsButton:
 		tmpFrame = currentWindowFrame
-
+		dialogOpened = true
 		drawSetupInstr(window, currentWindowFrame)
 
 	case DialogCloseButton:
 		if tmpFrame != nil {
+			dialogOpened = false
 			// send the frame to glfw window
 			windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 			g143.DrawImage(wWidth, wHeight, tmpFrame, windowRS)
@@ -253,7 +254,7 @@ func cursorPosCB(window *glfw.Window, xpos, ypos float64) {
 		}
 	}
 
-	if widgetCode == 0 {
+	if widgetCode == 0 || (widgetCode == DialogCloseButton && !dialogOpened) {
 		// send the last drawn frame to glfw window
 		windowRS := g143.Rect{Width: wWidth, Height: wHeight, OriginX: 0, OriginY: 0}
 		g143.DrawImage(wWidth, wHeight, currentWindowFrame, windowRS)
