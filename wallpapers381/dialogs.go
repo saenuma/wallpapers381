@@ -1,11 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"image"
-	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 
 	g143 "github.com/bankole7782/graphics143"
@@ -15,25 +11,10 @@ import (
 
 func drawSetupInstr(window *glfw.Window, currentFrame image.Image) {
 
-	var setupInstrStr string
-	if runtime.GOOS == "windows" {
-		hd, _ := os.UserHomeDir()
-		path := filepath.Join(hd, "Wallpapers381")
-		setupInstrStr = fmt.Sprintf(`
-1. Launch the App (needed to update the wallpapers store)
-2. Open Settings.
-3. Click Personalisation on the left and then click background
-4. Set the first select to Slideshow
-5. Click Browse and navigate to %s 
-6. Repeat this instructions after update.
-`, path)
-
-	} else {
-		setupInstrStr = `
+	setupInstrStr := `
 1.  Launch the terminal
 2.  Run the program wallpapers381.switch
 `
-	}
 
 	// background image
 	img := imaging.AdjustBrightness(currentFrame, -40)
